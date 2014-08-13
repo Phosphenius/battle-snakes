@@ -5,6 +5,8 @@ Battle Snakes is a - at the moment - multiplayer-only action game inspired by th
 
 It is still alpha and many features have yet to be implemented (Most importantly Bots)
 
+![screenshot](https://raw.github.com/Teazer/battle-snakes/master/screenshot.png)
+
 #####Controls
 
 ######Player 1 
