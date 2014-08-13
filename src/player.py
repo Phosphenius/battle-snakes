@@ -9,7 +9,7 @@ from settings import *
 
 # -- Controls --
 CTRLS1 = {'left':K_LEFT, 'right':K_RIGHT, 'up':K_UP, 'down':K_DOWN,
-'action':K_SLASH, 'boost':K_PERIOD}
+'action':K_l, 'boost':K_k}
 CTRLS2 = {'left':K_a, 'right':K_d, 'up':K_w, 'down':K_s, 'action':K_f,
 'boost':K_g}
 

@@ -18,6 +18,8 @@ from snake import *
 from player import *
 from combat import *
 
+VERSION = 'v0.1.0'
+
 class GraphicsManager:
 	def __init__(self, surf):
 		self.surf = surf
@@ -82,7 +84,7 @@ class Game1:
 	def __init__(self, res):
 		random.seed()
 		pygame.init()
-		pygame.display.set_caption("Battle Snakes - early alpha")
+		pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 		
 		self.sysfont = pygame.font.SysFont('Arial', 14)
 		self.screen = pygame.display.set_mode(res)
