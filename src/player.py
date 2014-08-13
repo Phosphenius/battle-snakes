@@ -1,3 +1,5 @@
+from collections import deque
+
 import pygame
 from pygame.locals import *
 
@@ -9,9 +11,9 @@ from settings import *
 
 # -- Controls --
 CTRLS1 = {'left':K_LEFT, 'right':K_RIGHT, 'up':K_UP, 'down':K_DOWN,
-'action':K_l, 'boost':K_k}
+'action':K_l, 'boost':K_k, 'nextweapon':K_j}
 CTRLS2 = {'left':K_a, 'right':K_d, 'up':K_w, 'down':K_s, 'action':K_f,
-'boost':K_g}
+'boost':K_g, 'nextweapon':K_h}
 
 # -- Players --
 PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1, 
@@ -34,6 +36,10 @@ class Player:
 		self.boost = INIT_BOOST
 		self.boosting = False
 		self.saved_speed = None
+		self.weapons = deque((
+		Weapon(self.game, self, STD_MG), 
+		Weapon(self.game, self, H_GUN), 
+		Weapon(self.game, self, PLASMA_GUN)))
 		
 	def set_lifes(self, lifes):
 		self.lifes = MAX_LIFES if lifes > MAX_LIFES else lifes
@@ -81,14 +87,22 @@ class Player:
 			self.boosting = True
 			self.saved_speed = self.snake.speed
 			self.snake.speed = BOOST_SPEED
+		elif key == self.ctrls['action']:
+			if self.weapons[0].ammo <= 0:
+				self.weapons.rotate(1)
+			self.weapons[0].set_firing(True)
 		
 	def key_up(self, key):
 		if key == self.ctrls['boost']:
 			self.boosting = False
 			self.snake.speed = self.saved_speed
+		elif key == self.ctrls['action']:
+			self.weapons[0].set_firing(False)
 		
 	def update(self, dt):
 		self.snake.update(dt)
+			
+		self.weapons[0].update(dt)
 		
 		if self.game.key_manager.key_pressed(self.ctrls['left']) \
 		and self.snake.heading != RIGHT:
@@ -103,14 +117,11 @@ class Player:
 		and self.snake.heading != LEFT:
 			self.snake.set_heading(RIGHT)
 			
+		if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
+			self.weapons.rotate(1)
+			
 		if self.snake.heading != self.snake.prev_heading:
 			self.snake.ismoving = True
-			
-		if self.game.key_manager.key_tapped(self.ctrls['action']) and \
-		self.snake.heading is not None:
-			self.game.shot_manager.create_shot(
-			add_vecs(self.snake[0], mul_vec(self.snake.heading, 2)), 
-			self.snake.heading, self.snake.head_tag, MG_SHOT1)
 			
 		if self.boost < BOOST_COST * dt:
 			self.boosting = False
@@ -150,6 +161,10 @@ class Player:
 		pygame.draw.rect(self.game.screen, BLUE,
 		pygame.Rect(add_vecs((102, 13), offset), (int(
 		self.boost / float(MAX_BOOST) * 100), 7)))
+		
+		self.game.draw_string('{0} {1}'.format(self.weapons[0]._type, 
+		self.weapons[0].ammo), 
+		add_vecs((208, 2), offset), WHITE)
 		
 		for i in range(self.lifes):
 			self.game.graphics.draw('life16x16', add_vecs((100, 24), 
