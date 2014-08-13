@@ -13,9 +13,9 @@ It is still alpha and many features have yet to be implemented (Most importantly
 
 Movement = Arrow Keys
 
-Shoot = / (Slash)
+Shoot = l 
 
-Speed Boost = . (Period)
+Speed Boost = k 
 
 ######Player 2 
 
