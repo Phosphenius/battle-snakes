@@ -1,3 +1,4 @@
 #!/bin/sh
 
-exec python ./src/Game.py
+cd ./src
+exec python Game.py
