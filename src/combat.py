@@ -7,7 +7,7 @@ PLASMA_SHOT = {'tex':'shot2', 'speed':30, 'damage':25, 'slowdown':2.5}
 
 # Weapons
 STD_MG = {'shot':MG_SHOT1, 'type':'std_mg', 'ammo':9999, 'freq':8}
-H_GUN = {'shot':SHOT1, 'type':'h_gun', 'ammo':35, 'freq':1.3}
+H_GUN = {'shot':SHOT1, 'type':'h_gun', 'ammo':20, 'freq':1.3}
 PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'plasma', 'ammo':50, 'freq':2.5}
 
 class Shot:

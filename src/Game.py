@@ -102,9 +102,9 @@ class Game1:
 		self.spatialhash = defaultdict(list)
 		
 		maybe_portals = {}
-		mapsurf = pygame.image.load('../data/maps/testmap1.png')
+		mapsurf = pygame.image.load('../data/maps/testmap2.png')
 		mapdata = pygame.PixelArray(mapsurf)
-		
+		# Load map
 		for y in range(ROWS):
 			for x in range(COLS):
 				if mapdata[x][y] == mapsurf.map_rgb(BLACK):
@@ -133,22 +133,22 @@ class Game1:
 		self.build_sh()
 		
 		for i in range(int(len(self.players)*5)):
-			self.pwrup_manager.spawn_pwrup(FOOD1)
+			self.pwrup_manager.spawn_pwrup('food1')
 			
 		for i in range(int(len(self.players)*2.5)):
-			self.pwrup_manager.spawn_pwrup(FOOD2)
+			self.pwrup_manager.spawn_pwrup('food2')
 			
 		for i in range(len(self.players)):
-			self.pwrup_manager.spawn_pwrup(FOOD3)
+			self.pwrup_manager.spawn_pwrup('food3')
 			
-		self.pwrup_manager.register_autospawn(EVILTHING, 12)
-		self.pwrup_manager.register_autospawn(SPEEDUP1, 3)
-		self.pwrup_manager.register_autospawn(SPEEDUP2, 1.5)
-		self.pwrup_manager.register_autospawn(SHRINK1, 2.5)
-		self.pwrup_manager.register_autospawn(SHRINK2, 1.8)
-		self.pwrup_manager.register_autospawn(HEAL, 1.2)
-		self.pwrup_manager.register_autospawn(JACKPOT, 1, 60)
-		self.pwrup_manager.register_autospawn(LIFE, 0.75, 120)
+		self.pwrup_manager.autospawn('evilthing', 12)
+		self.pwrup_manager.autospawn('speedup1', 3)
+		self.pwrup_manager.autospawn('speedup2', 1.5)
+		self.pwrup_manager.autospawn('shrink1', 2.5)
+		self.pwrup_manager.autospawn('shrink2', 1.8)
+		self.pwrup_manager.autospawn('heal', 1.2)
+		self.pwrup_manager.autospawn('jackpot', 1, 60)
+		self.pwrup_manager.autospawn('life', 0.75, 120)
 
 	# Treats 'obj' as if the playfield was toroidal
 	def toroidal(self, obj):

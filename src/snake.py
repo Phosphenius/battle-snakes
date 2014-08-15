@@ -45,7 +45,7 @@ class SnakeInvincibleState:
 		self.snake.isinvincible = False
 		self.snake.isvisible = True
 		
-class Snake:
+class Snake(object):
 	def __init__(self, game, pos, tex, _id, killed_handler):
 		self.game = game
 		self.body_tag = '#p{0}-body'.format(_id)
@@ -53,8 +53,8 @@ class Snake:
 		self.tex = tex
 		self.body = [pos, (pos[0] + 1, pos[1])]
 		self.heading = None
-		self.hitpoints = MAX_HITPOINTS
-		self.speed = INIT_SPEED
+		self._hitpoints = MAX_HITPOINTS
+		self._speed = INIT_SPEED
 		self.elapsed_t = 0.
 		self.grow = 0
 		self.isalive = True
@@ -66,12 +66,34 @@ class Snake:
 		self.prev = self.body[:]
 		self.prev_heading = self.heading
 		
+	@property
+	def hitpoints(self):
+		return self._hitpoints
+		
+	@hitpoints.setter
+	def hitpoints(self, value):
+		if value > MAX_HITPOINTS:
+			self._hitpoints = MAX_HITPOINTS
+		elif value < 0:
+			self._hitpoints = 0
+		else:
+			self._hitpoints = value
+		
+	@property
+	def speed(self):
+		return self._speed
+		
+	@speed.setter
+	def speed(self, value):
+		if value > MAX_SPEED:
+			self._speed = MAX_SPEED
+		elif value < MIN_SPEED:
+			self._speed = MIN_SPEED
+		else:
+			self._speed = value
+		
 	def gain_speed(self, speed):
 		self.speed += speed
-		if self.speed > MAX_SPEED:
-			self.speed = MAX_SPEED
-		elif self.speed < MIN_SPEED:
-			self.speed = MIN_SPEED
 			
 	def gain_hitpoints(self, hp):
 		self.hitpoints += hp
@@ -125,7 +147,7 @@ class Snake:
 
 	def respawn(self, pos):
 		self.body = [pos, (pos[0] + 1, pos[1])]
-		self.speed = INIT_SPEED
+		self._speed = INIT_SPEED
 		self.heading = None
 		self.prev_heading = None
 		self.ismoving = False
@@ -149,9 +171,9 @@ class Snake:
 			
 		self.body[0] = self.game.toroidal(self.body[0])
 		# Move Snake
-		if self.elapsed_t >= (1. / self.speed):
+		if self.elapsed_t >= (1. / self._speed):
 			self.prev = self.body[:]
-			self.elapsed_t -= (1. / self.speed)
+			self.elapsed_t -= (1. / self._speed)
 			self.body.insert(0, add_vecs(self.body[0], self.heading))
 			if self.grow == 0:
 				self.body.pop()

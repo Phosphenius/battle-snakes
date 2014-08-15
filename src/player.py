@@ -21,7 +21,7 @@ PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1,
 PLAYER2 = {'id':'2', 'color':RED, 'ctrls':CTRLS2, 
 'tex':'snake_body_p2'}
 
-class Player:
+class Player(object):
 	def __init__(self, game, config):
 		self.game = game
 		self.game.key_manager.key_down_event.append(self.key_down)
@@ -31,26 +31,48 @@ class Player:
 		self.color = config['color']
 		self.snake = Snake(game, game.native_spawnpoints[self._id], 
 		config['tex'], self._id, self.snake_killed)
-		self.lifes = INIT_LIFES
+		self._lifes = INIT_LIFES
 		self.points = 0
-		self.boost = INIT_BOOST
+		self._boost = INIT_BOOST
 		self.boosting = False
 		self.saved_speed = None
 		self.weapons = deque((
 		Weapon(self.game, self, STD_MG), 
 		Weapon(self.game, self, H_GUN), 
 		Weapon(self.game, self, PLASMA_GUN)))
+		self.pwrup_targets = {
+		'points':'points', 'grow' :'snake.grow', 'speed':'snake.speed',
+		'boost' :'boost' , 'lifes':'lifes', 
+		'hp':'snake.hitpoints'}
+		
+	@property
+	def lifes(self):
+		return self._lifes
+	
+	@lifes.setter
+	def lifes(self, value):
+		if value > MAX_LIFES:
+			self._lifes = MAX_LIFES
+		elif value < 0:
+			self._lifes = 0
+		else:
+			self._lifes = value
+		
+	@property
+	def boost(self):
+		return self._boost
+		
+	@boost.setter
+	def boost(self, value):
+		if value > MAX_BOOST:
+			self._boost = MAX_BOOST
+		elif value < 0:
+			self._boost = 0
+		else:
+			self._boost = value
 		
 	def set_lifes(self, lifes):
 		self.lifes = MAX_LIFES if lifes > MAX_LIFES else lifes
-	
-	def set_boost(self, b):
-		if b > MAX_BOOST:
-			self.boost = MAX_BOOST
-		elif b < 0:
-			self.boost = 0
-		else:
-			self.boost = b
 		
 	def coll_check_head(self, collobjs):
 		for tag, obj in collobjs:
@@ -61,13 +83,15 @@ class Player:
 			elif tag == PORTAL_TAG:
 				self.snake[0] = add_vecs(obj, self.snake.heading)
 			elif tag == PWRUP_TAG:
-				self.set_lifes(self.lifes + obj.lifes)
-				self.points += obj.points
-				self.snake.gain_speed(obj.speedgain)
-				self.set_boost(self.boost + obj.boostgain)
-				self.snake.grow += obj.grow
-				self.snake.gain_hitpoints(obj.hitpoints)
-				self.snake.take_damage(obj.damage, tag)
+				for a in obj.actions:
+					target = self.pwrup_targets[a['target']]
+					if '.' in target:
+						t1, t2 = target.split('.')
+						attr = getattr(getattr(self, t1), t2)
+						setattr(getattr(self, t1), t2, attr + a['value'])
+					else:
+						attr = getattr(self, target)
+						setattr(self, target, attr + a['value'])
 				obj.collect()
 			elif tag == SHOT_TAG:
 				self.handle_shot(obj)
@@ -86,9 +110,10 @@ class Player:
 		if key == self.ctrls['boost']:
 			self.boosting = True
 			self.saved_speed = self.snake.speed
-			self.snake.speed = BOOST_SPEED
+			self.snake._speed = BOOST_SPEED
 		elif key == self.ctrls['action']:
-			if self.weapons[0].ammo <= 0:
+			# Has the potential to cause an endless loop. 
+			while self.weapons[0].ammo <= 0:
 				self.weapons.rotate(1)
 			self.weapons[0].set_firing(True)
 		
@@ -118,7 +143,10 @@ class Player:
 			self.snake.set_heading(RIGHT)
 			
 		if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
+			# Dangerous... 
 			self.weapons.rotate(1)
+			while self.weapons[0].ammo <= 0:
+				self.weapons.rotate(1)
 			
 		if self.snake.heading != self.snake.prev_heading:
 			self.snake.ismoving = True
@@ -134,7 +162,7 @@ class Player:
 			else:
 				self.boost = b
 		else:
-			self.set_boost(self.boost + BOOST_GAIN * dt)
+			self.boost = self.boost + BOOST_GAIN * dt
 		
 	def snake_killed(self, by):
 		if self.lifes > 0:
