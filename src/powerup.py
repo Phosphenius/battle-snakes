@@ -68,6 +68,12 @@ class PowerupManager:
 				self.pwrup_prototypes[name]['autorespawn'] = \
 				bool(p_node.getAttribute('autorespawn'))
 				
+				attrs = ('lifetime', 'blinkrate', 'startblinkingat')
+				for attr in attrs:
+					if p_node.hasAttribute(attr):
+						self.pwrup_prototypes[name][attr] = \
+						float(p_node.getAttribute(attr))
+					
 				for node in p_node.childNodes:
 					if node.nodeName == 'action':
 						t_attr = node.getAttribute('target')
