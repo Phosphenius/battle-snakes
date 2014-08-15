@@ -93,14 +93,15 @@ class Weapon:
 			self.elapsed_t -= self.firerate
 			if self.ammo > 0:
 				if self.owner.snake.heading is not None:
-					self.ammo -= 1
-					self.game.shot_manager.create_shot(
+					head = self.owner.snake[0]
+					heading = self.owner.snake.heading
 					
-					add_vecs(self.owner.snake[0], 
-					mul_vec(self.owner.snake.heading, 2)), 
-					
-					self.owner.snake.heading, self.owner.snake.head_tag, 
-					self.shot)
+					if add_vecs(head, mul_vec(heading, 1)) not in \
+					self.game._map and head not in self.game._map:
+						self.ammo -= 1
+						self.game.shot_manager.create_shot(
+						add_vecs(head, mul_vec(heading, 2)), 
+						heading, self.owner.snake.head_tag, self.shot)
 			else:
 				self.firing = False
 	
