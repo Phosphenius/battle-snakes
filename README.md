@@ -1,5 +1,5 @@
-battle-snakes
-=============
+Battle Snakes v0.1.0
+====================
 
 Battle Snakes is a - at the moment - multiplayer-only action game inspired by the classic Snake game.
 
@@ -9,21 +9,19 @@ It is still alpha and many features have yet to be implemented (Most importantly
 
 #####Controls
 
-######Player 1 
+Player 1 
 
-Movement = Arrow Keys
+* Movement = Arrow Keys
+* Shoot = l 
+* Speed Boost = k 
+* Next Weapon = j
 
-Shoot = l 
+Player 2 
 
-Speed Boost = k 
-
-######Player 2 
-
-Movement = WASD
-
-Shoot = f
-
-Speed Boost = g
+* Movement = WASD
+* Shoot = c
+* Speed Boost = v
+* Next Weapon = b
 
 
 #####Dependencies

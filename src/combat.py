@@ -6,9 +6,9 @@ SHOT1 = {'tex':'shot1', 'speed':70, 'damage':100}
 PLASMA_SHOT = {'tex':'shot2', 'speed':30, 'damage':25, 'slowdown':2.5}
 
 # Weapons
-STD_MG = {'shot':MG_SHOT1, 'type':'std_mg', 'ammo':9999, 'freq':8}
-H_GUN = {'shot':SHOT1, 'type':'h_gun', 'ammo':20, 'freq':1.3}
-PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'plasma', 'ammo':50, 'freq':2.5}
+STD_MG = {'shot':MG_SHOT1, 'type':'MG', 'ammo':999999, 'freq':8}
+H_GUN = {'shot':SHOT1, 'type':'Cannon', 'ammo':20, 'freq':1.3}
+PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'Plasma', 'ammo':50, 'freq':2.5}
 
 class Shot:
 	def __init__(self, game, pos, heading, tag, config):

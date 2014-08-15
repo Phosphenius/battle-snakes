@@ -54,7 +54,7 @@
 	<Powerup name='jackpot' tex='jackpot' lifetime='20' blinkrate='0.25' startblinkingat='15'>
 		<action target='lifes' value='1'></action>
 		<action target='points' value='250'></action>
-		<action targe='hp' value='500'></action>
+		<action target='hp' value='500'></action>
 	</Powerup>
 	<Powerup name='life' tex='life' lifetime='15' blinkrate='0.1' startblinkingat='14'>
 		<action target='lifes' value='1'></action> 

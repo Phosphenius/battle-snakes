@@ -102,7 +102,7 @@ class Game1:
 		self.spatialhash = defaultdict(list)
 		
 		maybe_portals = {}
-		mapsurf = pygame.image.load('../data/maps/testmap2.png')
+		mapsurf = pygame.image.load('../data/maps/testmap0.png')
 		mapdata = pygame.PixelArray(mapsurf)
 		# Load map
 		for y in range(ROWS):
