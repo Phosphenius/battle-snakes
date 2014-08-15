@@ -55,6 +55,7 @@ class Snake(object):
 		self.heading = None
 		self._hitpoints = MAX_HITPOINTS
 		self._speed = INIT_SPEED
+		self._speed_bonus = 0
 		self.elapsed_t = 0.
 		self.grow = 0
 		self.isalive = True
@@ -91,6 +92,14 @@ class Snake(object):
 			self._speed = MIN_SPEED
 		else:
 			self._speed = value
+		
+	@property
+	def speed_bonus(self):
+		return self._speed_bonus
+		
+	@speed_bonus.setter
+	def speed_bonus(self, value):
+		self._speed_bonus = value
 		
 	def gain_speed(self, speed):
 		self.speed += speed
@@ -171,9 +180,9 @@ class Snake(object):
 			
 		self.body[0] = self.game.toroidal(self.body[0])
 		# Move Snake
-		if self.elapsed_t >= (1. / self._speed):
+		if self.elapsed_t >= 1. / (self._speed + self._speed_bonus):
 			self.prev = self.body[:]
-			self.elapsed_t -= (1. / self._speed)
+			self.elapsed_t -= 1. / (self._speed + self._speed_bonus)
 			self.body.insert(0, add_vecs(self.body[0], self.heading))
 			if self.grow == 0:
 				self.body.pop()

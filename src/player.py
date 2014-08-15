@@ -35,7 +35,6 @@ class Player(object):
 		self.points = 0
 		self._boost = INIT_BOOST
 		self.boosting = False
-		self.saved_speed = None
 		self.weapons = deque((
 		Weapon(self.game, self, STD_MG), 
 		Weapon(self.game, self, H_GUN), 
@@ -70,9 +69,6 @@ class Player(object):
 			self._boost = 0
 		else:
 			self._boost = value
-		
-	def set_lifes(self, lifes):
-		self.lifes = MAX_LIFES if lifes > MAX_LIFES else lifes
 		
 	def coll_check_head(self, collobjs):
 		for tag, obj in collobjs:
@@ -109,8 +105,7 @@ class Player(object):
 	def key_down(self, key):
 		if key == self.ctrls['boost']:
 			self.boosting = True
-			self.saved_speed = self.snake.speed
-			self.snake._speed = BOOST_SPEED
+			self.snake.speed_bonus = BOOST_SPEED
 		elif key == self.ctrls['action']:
 			# Has the potential to cause an endless loop. 
 			while self.weapons[0].ammo <= 0:
@@ -120,7 +115,7 @@ class Player(object):
 	def key_up(self, key):
 		if key == self.ctrls['boost']:
 			self.boosting = False
-			self.snake.speed = self.saved_speed
+			self.snake.speed_bonus = 0
 		elif key == self.ctrls['action']:
 			self.weapons[0].set_firing(False)
 		
@@ -153,7 +148,7 @@ class Player(object):
 			
 		if self.boost < BOOST_COST * dt:
 			self.boosting = False
-			self.snake.speed = self.saved_speed
+			self.snake.speed_bonus = 0
 		
 		if self.boosting:
 			b = self.boost - BOOST_COST * dt
