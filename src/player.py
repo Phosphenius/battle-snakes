@@ -12,8 +12,8 @@ from settings import *
 # -- Controls --
 CTRLS1 = {'left':K_LEFT, 'right':K_RIGHT, 'up':K_UP, 'down':K_DOWN,
 'action':K_l, 'boost':K_k, 'nextweapon':K_j}
-CTRLS2 = {'left':K_a, 'right':K_d, 'up':K_w, 'down':K_s, 'action':K_f,
-'boost':K_g, 'nextweapon':K_h}
+CTRLS2 = {'left':K_a, 'right':K_d, 'up':K_w, 'down':K_s, 'action':K_c,
+'boost':K_v, 'nextweapon':K_b}
 
 # -- Players --
 PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1, 
