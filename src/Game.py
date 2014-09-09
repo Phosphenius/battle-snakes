@@ -17,6 +17,7 @@ from powerup import *
 from snake import *
 from player import *
 from combat import *
+from map import *
 
 VERSION = 'v0.1.0'
 
@@ -93,44 +94,15 @@ class Game1:
 		self.graphics = GraphicsManager(self.screen)
 		self.pwrup_manager = PowerupManager(self)
 		self.shot_manager = ShotManager(self)
-		
-		self.spawnpoints = []
-		self.native_spawnpoints = {}
-		self._map = []
-		self.portals = {}
+		self._map = Map(self, '../data/maps/map01.xml')
 		
 		self.spatialhash = defaultdict(list)
 		
-		maybe_portals = {}
-		mapsurf = pygame.image.load('../data/maps/testmap0.png')
-		mapdata = pygame.PixelArray(mapsurf)
-		# Load map
-		for y in range(ROWS):
-			for x in range(COLS):
-				if mapdata[x][y] == mapsurf.map_rgb(BLACK):
-					self._map.append((x, y))
-				elif mapdata[x][y] == mapsurf.map_rgb(GREEN):
-					self.spawnpoints.append((x, y))
-				elif mapdata[x][y] == mapsurf.map_rgb(PLAYER1['color']):
-					self.spawnpoints.append((x, y))
-					self.native_spawnpoints[PLAYER1['id']] = (x, y)
-				elif mapdata[x][y] == mapsurf.map_rgb(PLAYER2['color']):
-					self.spawnpoints.append((x, y))
-					self.native_spawnpoints[PLAYER2['id']] = (x, y)
-				elif mapdata[x][y] != mapsurf.map_rgb(WHITE):
-					col = mapdata[x][y]
-					if col not in maybe_portals:
-						maybe_portals[col] = []
-					maybe_portals[col].append((x, y))
-					  
-		for v in maybe_portals.values():
-			if len(v) == 2:
-				self.portals.update({v[0]:v[1], v[1]:v[0]})	
-		
-		# Create two players
-		self.players = [Player(self, PLAYER1), Player(self, PLAYER2)]
-		
+		self.players = []
 		self.build_sh()
+		self.players.append(Player(self, PLAYER1))
+		self.build_sh()
+		self.players.append(Player(self, PLAYER2))
 		
 		for i in range(int(len(self.players)*5)):
 			self.pwrup_manager.spawn_pwrup('food1')
@@ -154,50 +126,69 @@ class Game1:
 	def toroidal(self, obj):
 		x, y = obj
 		if x < 0:
-			obj = (COLS-1, y)
-		if x > COLS-1:
+			obj = (self._map.width-1, y)
+		if x > self._map.width-1:
 			obj = (0, y)
 		if y < 0:
-			obj = (x, ROWS-1)
-		if y > ROWS-1:
+			obj = (x, self._map.height-1)
+		if y > self._map.height-1:
 			obj = (x, 0)
 		return obj
 	
+	# Returns a random, unblocked spawnpoint
 	def get_spawnpoint(self):
-		return random.choice(filter(self.isfree, self.spawnpoints))
+		return random.choice(filter(self.sp_unblocked, 
+		self._map.spawnpoints))
 		
 	def randpos(self):
 		while True:
-			pos = (random.randint(1, COLS-1), random.randint(1, ROWS-1))
-			if pos not in self.spatialhash and pos not in self._map:
+			pos = (random.randint(1, self._map.width-1), 
+			random.randint(1, self._map.height-1))
+			if pos not in self.spatialhash and pos not in self._map.tiles:
 				return pos
 	
-	# Test if a cell is free or blocked by something
-	def isfree(self, pos):
+	# Test if a cell is blocked by something
+	def isunblocked(self, pos):
 		return len(self.spatialhash.get(pos, [])) == 0
+		
+	# Determines if a spawnpoint is blocked
+	def sp_unblocked(self, sp):
+		return len(self.spatialhash[sp]) == 1
 	
-	def build_sh(self):
+	# Build the spatial hash used for collision detection
+	# Map data is never put into the sh since it never changes
+	def build_sh(self, include_players=True):
 		self.spatialhash.clear()
-		for k, v in self.portals.items():
+			
+		# Add spawnpoints (So powerups don't appear on them)
+		for sp in self._map.spawnpoints:
+			self.spatialhash[sp].append((SPAWNPOINT_TAG, sp))
+		
+		# Add portals
+		for k, v in self._map.portals.items():
 			self.spatialhash[k].append((PORTAL_TAG, v))
 			
+		# Add powerups 
 		for p in self.pwrup_manager.pwrup_pool:
 			if p.isalive:
 				self.spatialhash[p.pos].append((PWRUP_TAG, p))
-			
+		
+		# Add shots
 		for s in self.shot_manager.shot_pool:
 			if s.isalive:
 				self.spatialhash[s.pos].append((SHOT_TAG, s))
-			
+		
+		# Add snakes
 		for p in self.players:
 			self.spatialhash[p.snake[0]].append((p.snake.head_tag, 
 			p.snake))
 			for s in p.snake[1:]:
-				self.spatialhash[s].append((p.snake.body_tag, p.snake))
+				self.spatialhash[s].append((p.snake.body_tag, 
+				p.snake))
 		
 	def update(self, dt):
 		self.key_manager.update()
-		
+
 		self.pwrup_manager.update(dt)
 		self.shot_manager.update(dt)
 		
@@ -210,16 +201,17 @@ class Game1:
 			self.quit()
 				
 		for p in self.players:
-			if p.snake[0] in self._map:
+			if p.snake[0] in self._map.tiles:
 				p.snake.take_damage(20, WALL_TAG, True, True, 1, 
 				shrink=0, slowdown=0.07)
 				break
 					
 		for s in self.shot_manager.shot_pool:
-			if s.pos in self._map:
+			if s.pos in self._map.tiles:
 				s.hit()
-			if s.pos in self.portals:
-				s.pos = add_vecs(self.portals[s.pos], s.heading)
+			if s.pos in self._map.portals:
+				s.heading = self._map.portals[s.pos][1]
+				s.pos = add_vecs(self._map.portals[s.pos][0], s.heading)
 					
 		for k, v in self.spatialhash.items():
 			if len(v) > 1:
@@ -231,14 +223,7 @@ class Game1:
 							p.coll_check_body(v)
 
 	def draw(self):
-		for p in self.spawnpoints:
-			self.graphics.draw('spawnpoint', p)
-		
-		for p in self.portals.values():
-			self.graphics.draw('portal', p)
-			
-		for b in self._map:
-			self.graphics.draw('wall', b)	
+		self._map.draw()
 		
 		self.pwrup_manager.draw()
 		self.shot_manager.draw()

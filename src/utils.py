@@ -1,8 +1,21 @@
+# Adds to vectors
 def add_vecs(v1, v2):
     return (v1[0] + v2[0], v1[1] + v2[1])
-    
+
+# Multiplies a vector with a scalar
 def mul_vec(v1, scalar):
     return (v1[0] * scalar, v1[1] * scalar)
+
+# Converts the string representation of a vector to a tuple
+def str_to_vec(data):
+	return tuple(int(i) for i in data.strip().split(':'))
+
+# Converts a string representation of vectors to a list of tuples
+def str_to_vec_lst(data):
+		veclst = []
+		for entry in data.strip().split(';'):
+			veclst.append(str_to_vec(entry))
+		return veclst
 
 # Simple infinite timer
 # Note: Timer can't be stopped or paused

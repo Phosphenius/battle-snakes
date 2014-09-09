@@ -29,7 +29,7 @@ class Player(object):
 		self.ctrls = config['ctrls']
 		self._id = config['id']	
 		self.color = config['color']
-		self.snake = Snake(game, game.native_spawnpoints[self._id], 
+		self.snake = Snake(game, game.get_spawnpoint(), 
 		config['tex'], self._id, self.snake_killed)
 		self._lifes = INIT_LIFES
 		self.points = 0
@@ -77,7 +77,8 @@ class Player(object):
 				obj.take_damage(35, self.snake.head_tag, False, True, 
 				0.7, shrink=1, slowdown=0.03)
 			elif tag == PORTAL_TAG:
-				self.snake[0] = add_vecs(obj, self.snake.heading)
+				self.snake.heading = obj[1]
+				self.snake[0] = add_vecs(obj[0], self.snake.heading)
 			elif tag == PWRUP_TAG:
 				for a in obj.actions:
 					target = self.pwrup_targets[a['target']]

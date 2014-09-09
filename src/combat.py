@@ -97,7 +97,8 @@ class Weapon:
 					heading = self.owner.snake.heading
 					
 					if add_vecs(head, mul_vec(heading, 1)) not in \
-					self.game._map and head not in self.game._map:
+					self.game._map.tiles and \
+					head not in self.game._map.tiles:
 						self.ammo -= 1
 						self.game.shot_manager.create_shot(
 						add_vecs(head, mul_vec(heading, 2)), 

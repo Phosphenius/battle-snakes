@@ -6,6 +6,7 @@ RIGHT = (+1, 0)
 LEFT = (-1, 0)
 UP = (0, -1)
 DOWN = (0, +1)
+DIRECTIONS = {'right':RIGHT, 'left':LEFT, 'up':UP, 'down':DOWN}
 
 class SnakeNormalState:
 	def __init__(self, snake):
