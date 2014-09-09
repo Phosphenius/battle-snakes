@@ -114,10 +114,7 @@ class Game1:
 			self.pwrup_manager.spawn_pwrup('food3')
 			
 		self.pwrup_manager.autospawn('evilthing', 12)
-		self.pwrup_manager.autospawn('speedup1', 3)
-		self.pwrup_manager.autospawn('speedup2', 1.5)
-		self.pwrup_manager.autospawn('shrink1', 2.5)
-		self.pwrup_manager.autospawn('shrink2', 1.8)
+		self.pwrup_manager.autospawn('speedup1', 2)
 		self.pwrup_manager.autospawn('heal', 1.2)
 		self.pwrup_manager.autospawn('jackpot', 1, 60)
 		self.pwrup_manager.autospawn('life', 0.75, 120)

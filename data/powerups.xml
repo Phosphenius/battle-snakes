@@ -32,19 +32,6 @@
 		<action target='boost' value='100000'></action>
 		<action target='speed' value='0.8'></action>
 	</Powerup>
-	<Powerup name='speedup2' tex='speedup2' lifetime='8' blinkrate='0.35' startblinkingat='6.5'>
-		<action target='points' value='3'></action>
-		<action target='boost' value='100000'></action>
-		<action target='speed' value='1.2'></action>
-	</Powerup>
-	<Powerup name='shrink1' tex='shrink1' lifetime='15' blinkrate='0.75' startblinkingat='10'>
-		<action target='points' value='5'></action>
-		<action target='grow' value='-2'></action>
-	</Powerup>
-	<Powerup name='shrink2' tex='shrink2' lifetime='11' blinkrate='0.4' startblinkingat='9'>
-		<action target='points' value='10'></action>
-		<action target='grow' value='-5'></action>
-	</Powerup>
 	<Powerup name='heal' tex='heal' lifetime='20' blinkrate='0.3' startblinkingat='18'>
 		<action target='points' value='8'></action>
 		<action target='hp' value='450'></action>
