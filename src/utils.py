@@ -1,51 +1,61 @@
-# Adds to vectors
-def add_vecs(v1, v2):
-    return (v1[0] + v2[0], v1[1] + v2[1])
+"""Contains useful functions"""
 
-# Multiplies a vector with a scalar
-def mul_vec(v1, scalar):
-    return (v1[0] * scalar, v1[1] * scalar)
+def add_vecs(vec1, vec2):
+    """Add vectors."""
+    return (vec1[0] + vec2[0], vec1[1] + vec2[1])
 
-# Converts the string representation of a vector to a tuple
+def mul_vec(vec, scalar):
+    """Multiply vector with scalar."""
+    return (vec[0] * scalar, vec[1] * scalar)
+
 def str_to_vec(data):
-	return tuple(int(i) for i in data.strip().split(':'))
+    """Convert string rep. of a vector to tuple."""
+    return tuple(int(i) for i in data.strip().split(':'))
 
 # Converts a string representation of vectors to a list of tuples
 def str_to_vec_lst(data):
-		veclst = []
-		for entry in data.strip().split(';'):
-			veclst.append(str_to_vec(entry))
-		return veclst
+    """Convert string rep. of vector list to tuple list."""
+    veclst = []
+    for entry in data.strip().split(';'):
+        veclst.append(str_to_vec(entry))
+    return veclst
 
-# Simple infinite timer
-# Note: Timer can't be stopped or paused
-class Timer:
-	def __init__(self, intervall, tick, delay=0, running=False):
-		self.intervall = intervall
-		self.Tick = tick
-		self.elapsed_t = 0.
-		self.delay = delay
-		self.running = running if self.delay == 0 else False
-		
-	def start(self, delay=0):
-		if delay != 0:
-			self.delay = delay
-			return
-		self.running = True
-		self.elapsed_t = 0.
-		
-	def update(self, dt):
-		if self.running:
-			self.elapsed_t += dt
-			if self.elapsed_t >= self.intervall:
-				self.elapsed_t -= self.intervall
+class Timer(object):
+
+    """
+    Simple infinite timer.
+
+    Note: Timer cannont be stopped.
+    """
+
+    def __init__(self, intervall, tick, delay=0, running=False):
+        self.intervall = intervall
+        self.tick = tick
+        self.elapsed_t = 0.
+        self.delay = delay
+        self.running = running if self.delay == 0 else False
+
+    def start(self, delay=0):
+        """Start timer."""
+        if delay != 0:
+            self.delay = delay
+            return
+        self.running = True
+        self.elapsed_t = 0.
+
+    def update(self, delta_time):
+        """Update timer."""
+        if self.running:
+            self.elapsed_t += delta_time
+            if self.elapsed_t >= self.intervall:
+                self.elapsed_t -= self.intervall
                 # On tick
-				if self.Tick is not None:
-					self.Tick()
-				else:
-					raise Exception('No Tick-event handler!')
-		elif self.delay > 0.:
-			self.elapsed_t += dt
-			if self.elapsed_t >= self.delay:
-				self.running = True
-				self.elapsed_t = 0.
+                if self.tick is not None:
+                    self.tick()
+                else:
+                    raise Exception('No Tick-event handler!')
+        elif self.delay > 0.:
+            self.elapsed_t += delta_time
+            if self.elapsed_t >= self.delay:
+                self.running = True
+                self.elapsed_t = 0.

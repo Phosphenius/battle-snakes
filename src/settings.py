@@ -1,4 +1,4 @@
-# -- Settings --
+"""Settings."""
 
 INVINCIBILITY_BLINK_RATE = 0.1
 
@@ -27,7 +27,7 @@ PANEL_H = 42
 SCR_W = COLS * CELL_SIZE
 SCR_H = (ROWS * CELL_SIZE) + PANEL_H
 
-# Tags 
+# Tags
 PWRUP_TAG = '#powerup'
 PORTAL_TAG = '#portal'
 WALL_TAG = '#wall'

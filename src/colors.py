@@ -1,3 +1,5 @@
+"""Define some colors."""
+
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 LIGHT_GRAY = (178, 178, 178)
