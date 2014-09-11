@@ -14,9 +14,18 @@ import shutil
 import pygame
 
 from colors import WHITE, BLUE
+from utils import vec_lst_to_str
 
 MAP_SRC_DIR = '../data/mapsources'
 MAP_DEST_DIR = '../data/maps'
+
+def create_vec_lst_tag(tag_name, lst):
+    """Creates an XML tag containing the specified vector list."""
+    tag = dom.Element(tag_name)
+    text = dom.Text()
+    text.data = vec_lst_to_str(lst)
+    tag.appendChild(text)
+    return tag
 
 def main():
     """Here is where the magic happens."""
@@ -32,18 +41,12 @@ def main():
                   os.path.join(MAP_DEST_DIR,
                   os.path.basename(src) + '.xml'))
 
-        doc = dom.parse(dest)
-        maptag = doc.firstChild
-
         mapsurf = pygame.image.load(os.path.join(src, 'map.png'))
         mapdata = pygame.PixelArray(mapsurf)
+
         width, height = mapsurf.get_size()
         tiles = []
         spawnpoints = []
-
-        size_attr = dom.Attr('size')
-        size_attr.value = '{0}x{1}'.format(width, height)
-        maptag.setAttributeNode(size_attr)
 
         for row in range(height):
             for col in range(width):
@@ -52,33 +55,16 @@ def main():
                 elif mapdata[col][row] == mapsurf.map_rgb(BLUE):
                     spawnpoints.append((col, row))
 
-        sp_tag = dom.Element('Spawnpoints')
-        tile_tag = dom.Element('Tiles')
+        doc = dom.parse(dest)
+        maptag = doc.firstChild
 
-        str_sp = ''
-        for i, spawnpoint in enumerate(spawnpoints):
-            if i != 0:
-                str_sp += ';{0}:{1}'.format(*spawnpoint)
-            else:
-                str_sp += '{0}:{1}'.format(*spawnpoint)
+        # Add 'size' attr
+        size_attr = dom.Attr('size')
+        size_attr.value = '{0}x{1}'.format(width, height)
+        maptag.setAttributeNode(size_attr)
 
-        text_sp = dom.Text()
-        text_sp.data = str_sp
-
-        str_tiles = ''
-        for i, tile in enumerate(tiles):
-            if i != 0:
-                str_tiles += ';{0}:{1}'.format(*tile)
-            else:
-                str_tiles += '{0}:{1}'.format(*tile)
-
-        text_t = dom.Text()
-        text_t.data = str_tiles
-
-        sp_tag.appendChild(text_sp)
-        tile_tag.appendChild(text_t)
-        maptag.appendChild(sp_tag)
-        maptag.appendChild(tile_tag)
+        maptag.appendChild(create_vec_lst_tag('Spawnpoints', spawnpoints))
+        maptag.appendChild(create_vec_lst_tag('Tiles', tiles))
 
         with open(dest, 'w') as xml_file:
             doc.writexml(xml_file)

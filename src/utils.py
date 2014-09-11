@@ -1,4 +1,4 @@
-"""Contains useful functions"""
+"""Contains useful functions/classes"""
 
 def add_vecs(vec1, vec2):
     """Add vectors."""
@@ -12,13 +12,21 @@ def str_to_vec(data):
     """Convert string rep. of a vector to tuple."""
     return tuple(int(i) for i in data.strip().split(':'))
 
-# Converts a string representation of vectors to a list of tuples
 def str_to_vec_lst(data):
     """Convert string rep. of vector list to tuple list."""
     veclst = []
     for entry in data.strip().split(';'):
         veclst.append(str_to_vec(entry))
     return veclst
+
+def vec_lst_to_str(lst):
+    """Convert list of tuples to string rep."""
+    str_rep = ''
+    for i, vec in enumerate(lst):
+        sep = ';' if i != 0 else ''
+        str_rep += '{0}{1}:{2}'.format(sep, vec[0], vec[1])
+    return str_rep
+
 
 class Timer(object):
 
