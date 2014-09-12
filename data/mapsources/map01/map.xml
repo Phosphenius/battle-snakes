@@ -1,14 +1,6 @@
 <?xml version="1.0"?>
 <Map description='Just a test map'>
 	<Portals>
-		<Portal>
-			<p1 dir='right'>5:3</p1>
-			<p2 dir='up'>20:45</p2>
-		</Portal>
-		<Portal>
-			<p1 dir='up'>30:10</p1>
-			<p2 dir='left'>100:6</p2>
-		</Portal>
 	</Portals>
 </Map>
 
