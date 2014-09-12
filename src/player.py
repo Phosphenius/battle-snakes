@@ -28,17 +28,14 @@ PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1,
 PLAYER2 = {'id':'2', 'color':RED, 'ctrls':CTRLS2,
 'tex':'snake_body_p2'}
 
-class Player(object):
-
+class PlayerBase(object):
+    
     """
-    Player class.
+    Player base class.
     """
-
+    
     def __init__(self, game, config):
         self.game = game
-        self.game.key_manager.key_down_event.append(self.key_down)
-        self.game.key_manager.key_up_event.append(self.key_up)
-        self.ctrls = config['ctrls']
         self._id = config['id']
         self.color = config['color']
         self.snake = Snake(game, game.get_spawnpoint(),
@@ -55,7 +52,7 @@ class Player(object):
         'points':'points', 'grow' :'snake.grow', 'speed':'snake.speed',
         'boost' :'boost', 'lifes':'lifes',
         'hp':'snake.hitpoints'}
-
+        
     @property
     def lifes(self):
         """Return lifes."""
@@ -123,49 +120,11 @@ class Player(object):
         slowdown=shot.slowdown, shrink=1)
         shot.hit()
 
-    def key_down(self, key):
-        """Key down event handler."""
-        if key == self.ctrls['boost']:
-            self.boosting = True
-            self.snake.speed_bonus = BOOST_SPEED
-        elif key == self.ctrls['action']:
-            # Has the potential to cause an endless loop.
-            while self.weapons[0].ammo <= 0:
-                self.weapons.rotate(1)
-            self.weapons[0].set_firing(True)
-
-    def key_up(self, key):
-        """Key up event handler."""
-        if key == self.ctrls['boost']:
-            self.boosting = False
-            self.snake.speed_bonus = 0
-        elif key == self.ctrls['action']:
-            self.weapons[0].set_firing(False)
-
+        
     def update(self, delta_time):
-        """Update player."""
         self.snake.update(delta_time)
 
         self.weapons[0].update(delta_time)
-
-        if self.game.key_manager.key_pressed(self.ctrls['left']) \
-        and self.snake.heading != RIGHT:
-            self.snake.set_heading(LEFT)
-        elif self.game.key_manager.key_pressed(self.ctrls['up']) \
-        and self.snake.heading != DOWN:
-            self.snake.set_heading(UP)
-        elif self.game.key_manager.key_pressed(self.ctrls['down']) \
-        and self.snake.heading != UP:
-            self.snake.set_heading(DOWN)
-        elif self.game.key_manager.key_pressed(self.ctrls['right']) \
-        and self.snake.heading != LEFT:
-            self.snake.set_heading(RIGHT)
-
-        if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
-            # Dangerous...
-            self.weapons.rotate(1)
-            while self.weapons[0].ammo <= 0:
-                self.weapons.rotate(1)
 
         if self.snake.heading != self.snake.prev_heading:
             self.snake.ismoving = True
@@ -183,13 +142,7 @@ class Player(object):
         else:
             self.boost = self.boost + BOOST_GAIN * delta_time
 
-    def snake_killed(self, killed_by):
-        """Snake killed event handler."""
-        if self.lifes > 0:
-            self.lifes -= 1
-            self.boost = MAX_BOOST
-            self.snake.respawn(self.game.get_spawnpoint())
-
+        
     def draw(self, offset):
         """Draw snake and UI."""
         self.snake.draw()
@@ -218,3 +171,73 @@ class Player(object):
         for i in range(self.lifes):
             self.game.graphics.draw('life16x16', add_vecs((100, 24),
             offset), gridcoords=False, offset=(i*18, 0))
+
+    def snake_killed(self, killed_by):
+        """Snake killed event handler."""
+        if self.lifes > 0:
+            self.lifes -= 1
+            self.boost = MAX_BOOST
+            self.snake.respawn(self.game.get_spawnpoint())
+    
+class Bot(PlayerBase):
+    def __init__(self):
+        pass
+        
+    def update(self, delta_time):
+        pass
+    
+class Player(PlayerBase):
+
+    """
+    Player class.
+    """
+
+    def __init__(self, game, config):
+        PlayerBase.__init__(self, game, config)
+        
+        self.game.key_manager.key_down_event.append(self.key_down)
+        self.game.key_manager.key_up_event.append(self.key_up)
+        self.ctrls = config['ctrls']
+
+    def key_down(self, key):
+        """Key down event handler."""
+        if key == self.ctrls['boost']:
+            self.boosting = True
+            self.snake.speed_bonus = BOOST_SPEED
+        elif key == self.ctrls['action']:
+            # Has the potential to cause an endless loop.
+            while self.weapons[0].ammo <= 0:
+                self.weapons.rotate(1)
+            self.weapons[0].set_firing(True)
+
+    def key_up(self, key):
+        """Key up event handler."""
+        if key == self.ctrls['boost']:
+            self.boosting = False
+            self.snake.speed_bonus = 0
+        elif key == self.ctrls['action']:
+            self.weapons[0].set_firing(False)
+
+    def update(self, delta_time):
+        """Update player."""
+        
+        PlayerBase.update(self, delta_time)
+        
+        if self.game.key_manager.key_pressed(self.ctrls['left']) \
+        and self.snake.heading != RIGHT:
+            self.snake.set_heading(LEFT)
+        elif self.game.key_manager.key_pressed(self.ctrls['up']) \
+        and self.snake.heading != DOWN:
+            self.snake.set_heading(UP)
+        elif self.game.key_manager.key_pressed(self.ctrls['down']) \
+        and self.snake.heading != UP:
+            self.snake.set_heading(DOWN)
+        elif self.game.key_manager.key_pressed(self.ctrls['right']) \
+        and self.snake.heading != LEFT:
+            self.snake.set_heading(RIGHT)
+
+        if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
+            # Dangerous...
+            self.weapons.rotate(1)
+            while self.weapons[0].ammo <= 0:
+                self.weapons.rotate(1)
