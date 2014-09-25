@@ -47,10 +47,10 @@ class Pathfinder(object):
     def on_search_done(self, success, path):
         self.search_done_listener(success, path)
 
-    def find_path(self, start, dest, obstacles):
-        thread.start_new_thread(self._find_path, (start, dest, obstacles))
+    def find_path(self, start, dest):
+        thread.start_new_thread(self._find_path, (start, dest))
 
-    def _find_path(self, start, dest, obstacles):
+    def _find_path(self, start, dest):
         """"""
         self.open_lst = set()
         self.closed_lst = set()
@@ -86,15 +86,12 @@ class Pathfinder(object):
                 self.on_search_done(True, path)
                 return 
 
-            self.expand_node(curr_node, dest_node, obstacles)
+            self.expand_node(curr_node, dest_node)
 
         self.on_search_done(False, None)
 
-    def expand_node(self, curr_node, dest_node, obstacles):
+    def expand_node(self, curr_node, dest_node):
         for neigh in self.get_adjacent(curr_node):
-
-            if neigh in obstacles:
-                continue
 
             if self.blocked[neigh[0]][neigh[1]]:
                 continue

@@ -205,8 +205,7 @@ class Bot(PlayerBase):
             self.game.randomizer.choice(self.game.pwrup_manager.get_powerups()).pos
             self.searching = True
             self.pathfinder.find_path(self.target, 
-            self.path[len(self.path)-1] if self.path else self.snake[0],
-            self.path)
+            self.path[len(self.path)-1] if self.path else self.snake[0])
         
         if self.path and self.next_tile == self.snake[0]:
             self.next_tile = self.path.pop(0)
