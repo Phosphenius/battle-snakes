@@ -14,7 +14,7 @@ from pygame.locals import QUIT, K_q, K_ESCAPE
 from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
 from powerup import PowerupManager
-from player import Player, PLAYER1, PLAYER2
+from player import Player, Bot, PLAYER1, BOT
 from combat import ShotManager
 from map import Map
 from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
@@ -105,10 +105,10 @@ class BattleSnakesGame(object):
     """
 
     def __init__(self, res):
-        random.seed()
         pygame.init()
         pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 
+        self.randomizer = random.Random(1)
         self.sysfont = pygame.font.SysFont('Arial', 14)
         self.screen = pygame.display.set_mode(res)
         self.fps_clock = pygame.time.Clock()
@@ -124,7 +124,7 @@ class BattleSnakesGame(object):
         self.build_sh()
         self.players.append(Player(self, PLAYER1))
         self.build_sh()
-        self.players.append(Player(self, PLAYER2))
+        self.players.append(Bot(self, BOT))
 
         self.pwrup_manager.spawn_pwrup('food1',
         int(len(self.players)*5))
@@ -155,15 +155,15 @@ class BattleSnakesGame(object):
 
     def get_spawnpoint(self):
         """Return  random, unblocked spawnpoint."""
-        return random.choice([spawnpoint for spawnpoint in \
+        return self.randomizer.choice([spawnpoint for spawnpoint in \
         self._map.spawnpoints \
         if self.sp_unblocked(spawnpoint)])
 
     def randpos(self):
         """Return random position."""
         while True:
-            pos = (random.randint(1, self._map.width-1),
-            random.randint(1, self._map.height-1))
+            pos = (self.randomizer.randint(1, self._map.width-1),
+            self.randomizer.randint(1, self._map.height-1))
             if pos not in self.spatialhash and pos not in self._map.tiles:
                 return pos
 
@@ -261,6 +261,10 @@ class BattleSnakesGame(object):
         for i, player in enumerate(self.players):
             player.draw(mul_vec((290, 0), i))
 
+        # Show the bots path for debugging purposes.
+        for tile in self.players[1].path:
+            self.graphics.draw('shot1', tile)
+
         self.draw_string('FPS: {0:.2f}'.
         format(self.fps_clock.get_fps()), (1200, 2), WHITE)
 
@@ -275,7 +279,7 @@ class BattleSnakesGame(object):
                 if event.type == QUIT:
                     quit_game()
             self.screen.fill(BLACK)
-            delta_time = self.fps_clock.tick() / 1000.0
+            delta_time = self.fps_clock.tick(60) / 1000.0
             self.update(delta_time)
             self.draw()
             pygame.display.update()

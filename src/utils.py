@@ -4,6 +4,10 @@ def add_vecs(vec1, vec2):
     """Add vectors."""
     return (vec1[0] + vec2[0], vec1[1] + vec2[1])
 
+def sub_vecs(vec1, vec2):
+    """Sub vectors."""
+    return (vec1[0] - vec2[0], vec1[1] - vec2[1])
+
 def mul_vec(vec, scalar):
     """Multiply vector with scalar."""
     return (vec[0] * scalar, vec[1] * scalar)

@@ -3,14 +3,16 @@ Player module.
 """
 
 from collections import deque
+from math import atan2, degrees
 
 import pygame
 from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
 K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 
+from pathfinder import Pathfinder, EUCLIDIAN_DISTANCE, MANHATTEN_DISTANCE
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
-from utils import add_vecs
+from utils import add_vecs, sub_vecs
 from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN
 from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
 BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG, PWRUP_TAG, SHOT_TAG,
@@ -27,13 +29,14 @@ PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1,
 'tex':'snake_body_p1'}
 PLAYER2 = {'id':'2', 'color':RED, 'ctrls':CTRLS2,
 'tex':'snake_body_p2'}
+BOT = {'id':2, 'color':RED, 'tex':'snake_body_p2'}
 
 class PlayerBase(object):
-    
+
     """
     Player base class.
     """
-    
+
     def __init__(self, game, config):
         self.game = game
         self._id = config['id']
@@ -52,7 +55,7 @@ class PlayerBase(object):
         'points':'points', 'grow' :'snake.grow', 'speed':'snake.speed',
         'boost' :'boost', 'lifes':'lifes',
         'hp':'snake.hitpoints'}
-        
+
     @property
     def lifes(self):
         """Return lifes."""
@@ -120,7 +123,6 @@ class PlayerBase(object):
         slowdown=shot.slowdown, shrink=1)
         shot.hit()
 
-        
     def update(self, delta_time):
         self.snake.update(delta_time)
 
@@ -142,7 +144,7 @@ class PlayerBase(object):
         else:
             self.boost = self.boost + BOOST_GAIN * delta_time
 
-        
+
     def draw(self, offset):
         """Draw snake and UI."""
         self.snake.draw()
@@ -178,14 +180,50 @@ class PlayerBase(object):
             self.lifes -= 1
             self.boost = MAX_BOOST
             self.snake.respawn(self.game.get_spawnpoint())
-    
+
 class Bot(PlayerBase):
-    def __init__(self):
-        pass
+    def __init__(self, game, config):
+        PlayerBase.__init__(self, game, config)
         
+        self.pathfinder = Pathfinder(self.game._map, MANHATTEN_DISTANCE, 
+        self.pathfinder_search_done)
+
+        self.searching = False
+        self.path = []
+        self.next_tile = self.snake[0]
+        self.target = None
+
+    def pathfinder_search_done(self, success, path):
+        self.searching = False
+        if success:
+            self.path.extend(path)
+
     def update(self, delta_time):
-        pass
-    
+        if len(self.path) <= 20 and not self.searching:
+            prev_target = self.target
+            self.target = \
+            self.game.randomizer.choice(self.game.pwrup_manager.get_powerups()).pos
+            self.searching = True
+            self.pathfinder.find_path(self.target, 
+            self.path[len(self.path)-1] if self.path else self.snake[0],
+            self.path)
+        
+        if self.path and self.next_tile == self.snake[0]:
+            self.next_tile = self.path.pop(0)
+            angle = degrees(atan2(*sub_vecs(self.next_tile,
+            self.snake[0])))
+
+            if angle == 90.0:
+                self.snake.set_heading(RIGHT)
+            elif angle == -90.0:
+                self.snake.set_heading(LEFT)
+            elif angle == 180.0:
+                self.snake.set_heading(UP)
+            elif angle == 0.0:
+                self.snake.set_heading(DOWN)
+
+        PlayerBase.update(self, delta_time)
+
 class Player(PlayerBase):
 
     """
@@ -194,7 +232,7 @@ class Player(PlayerBase):
 
     def __init__(self, game, config):
         PlayerBase.__init__(self, game, config)
-        
+
         self.game.key_manager.key_down_event.append(self.key_down)
         self.game.key_manager.key_up_event.append(self.key_up)
         self.ctrls = config['ctrls']
@@ -220,9 +258,9 @@ class Player(PlayerBase):
 
     def update(self, delta_time):
         """Update player."""
-        
+
         PlayerBase.update(self, delta_time)
-        
+
         if self.game.key_manager.key_pressed(self.ctrls['left']) \
         and self.snake.heading != RIGHT:
             self.snake.set_heading(LEFT)

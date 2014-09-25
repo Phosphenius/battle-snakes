@@ -105,6 +105,9 @@ class PowerupManager(object):
                         {'target':t_attr, 'value':float(val_attr) \
                         if '.' in val_attr else int(val_attr)})
 
+    def get_powerups(self):
+        return tuple(self.pwrup_pool)
+
     def autospawn(self, config, freq, delay=0):
         """Register a powerup so it will be spawned automatically."""
         timer = Timer(1. / (freq / 60.),
