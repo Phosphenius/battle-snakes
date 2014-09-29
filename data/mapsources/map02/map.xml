@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<Map description='La li lu'>
+    <Portals>
+        <Portal>
+            <p1 dir='down'>31:23</p1>
+            <p2 dir='right'>90:12</p2>
+        </Portal>
+        <Portal>
+            <p1 dir='left'>70:37</p1>
+            <p2 dir='right'>10:10</p2>
+        </Portal>
+    </Portals>
+</Map>
+
