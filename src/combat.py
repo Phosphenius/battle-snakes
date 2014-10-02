@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Combat module.
 """
@@ -15,7 +16,7 @@ H_GUN = {'shot':SHOT1, 'type':'Cannon', 'ammo':20, 'freq':1.3}
 PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'Plasma', 'ammo':50, 'freq':2.5}
 
 DEFAULT_SHOT_BLINK_RATE = 100000
-DEFAULT_SHOT_LIFETIME = 5
+DEFAULT_SHOT_LIFETIME = 3.5
 
 class Shot(object):
     """Represents a shot."""
@@ -73,7 +74,7 @@ class Shot(object):
         if self.elapsed_blink >= self.blinkrate:
             self.elapsed_blink -= self.blinkrate
             self.isvisible = not self.isvisible
-            
+
         if self.elapsed_lifetime >= self.lifetime:
             self.hit()
 
@@ -123,7 +124,7 @@ class Weapon(object):
         self.owner = owner
         self.ammo = config['ammo']
         self.shot = config['shot']
-        self._type = config['type']
+        self.wtype = config['type']
         self.firerate = 1. / config['freq']
         self.elapsed_t = 0
         self.firing = False
@@ -145,8 +146,8 @@ class Weapon(object):
                     heading = self.owner.snake.heading
 
                     if add_vecs(head, mul_vec(heading, 1)) not in \
-                    self.game._map.tiles and \
-                    head not in self.game._map.tiles:
+                    self.game.tilemap.tiles and \
+                    head not in self.game.tilemap.tiles:
                         self.ammo -= 1
                         self.game.shot_manager.create_shot(
                         add_vecs(head, mul_vec(heading, 2)),

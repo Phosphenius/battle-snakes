@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Powerup module.
 """
@@ -106,6 +107,7 @@ class PowerupManager(object):
                         if '.' in val_attr else int(val_attr)})
 
     def get_powerups(self):
+        """Return all powerups stored in a tuple."""
         return tuple(self.pwrup_pool)
 
     def autospawn(self, config, freq, delay=0):

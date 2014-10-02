@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Define some colors."""
 
 WHITE = (255, 255, 255)

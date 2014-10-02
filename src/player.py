@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Player module.
 """
@@ -9,7 +10,7 @@ import pygame
 from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
 K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 
-from pathfinder import Pathfinder, EUCLIDIAN_DISTANCE, MANHATTEN_DISTANCE
+from pathfinder import Pathfinder, MANHATTEN_DISTANCE
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
 from utils import add_vecs, sub_vecs
@@ -39,10 +40,10 @@ class PlayerBase(object):
 
     def __init__(self, game, config):
         self.game = game
-        self._id = config['id']
+        self.pid = config['id']
         self.color = config['color']
         self.snake = Snake(game, game.get_spawnpoint(),
-        config['tex'], self._id, self.snake_killed)
+        config['tex'], self.pid, self.snake_killed)
         self._lifes = INIT_LIFES
         self.points = 0
         self._boost = INIT_BOOST
@@ -124,6 +125,7 @@ class PlayerBase(object):
         shot.hit()
 
     def update(self, delta_time):
+        """Update player, move snake."""
         self.snake.update(delta_time)
 
         self.weapons[0].update(delta_time)
@@ -148,7 +150,7 @@ class PlayerBase(object):
     def draw(self, offset):
         """Draw snake and UI."""
         self.snake.draw()
-        self.game.draw_string('Player{0}'.format(self._id),
+        self.game.draw_string('Player{0}'.format(self.pid),
         add_vecs((2, 2), offset), self.color)
         self.game.draw_string('{0:.2f}'.format(self.snake.speed),
         add_vecs((56, 2), offset), WHITE)
@@ -166,7 +168,7 @@ class PlayerBase(object):
         pygame.Rect(add_vecs((102, 13), offset), (int(
         self.boost / float(MAX_BOOST) * 100), 7)))
 
-        self.game.draw_string('{0} {1}'.format(self.weapons[0]._type,
+        self.game.draw_string('{0} {1}'.format(self.weapons[0].wtype,
         self.weapons[0].ammo),
         add_vecs((208, 2), offset), WHITE)
 
@@ -181,25 +183,17 @@ class PlayerBase(object):
             self.boost = MAX_BOOST
             self.snake.respawn(self.game.get_spawnpoint())
 
-class BotAttackState(object):
-    def __init__(self):
-        pass
-
-    def update(self, delta_time):
-        pass
-
-class BotCollectState(object):
-    def __init__(self):
-        pass
-
-    def update(self, delta_time):
-        pass
-
 class Bot(PlayerBase):
+
+    """
+    Basic bot class.
+    """
+
     def __init__(self, game, config):
         PlayerBase.__init__(self, game, config)
 
-        self.pathfinder = Pathfinder(self.game._map, MANHATTEN_DISTANCE,
+        self.pathfinder = Pathfinder(self.game.tilemap,
+        MANHATTEN_DISTANCE,
         self.pathfinder_search_done)
 
         self.searching = False
@@ -207,39 +201,47 @@ class Bot(PlayerBase):
         self.next_tile = self.snake[0]
         self.target = None
 
-    def change_state(self, new_state):
-        pass
-
     def pathfinder_search_done(self, success, path):
+        """Event handler for pathfinder search done event."""
         self.searching = False
         if success:
             self.path.extend(path)
 
     def update(self, delta_time):
+        """This is where all the stuff gets updated."""
+
+        # Select new target and compute new path to it if remaining path
+        # becomes too short.
         if len(self.path) <= 24 and not self.searching:
-            prev_target = self.target
+            # We just select a random target here which in rare cases
+            # causes a bug if we select the same target twice.
+            # GET THIS FIXED!
             self.target = \
-            self.game.randomizer.choice(self.game.pwrup_manager.get_powerups()).pos
+            self.game.randomizer.choice(
+            self.game.pwrup_manager.get_powerups()).pos
             self.searching = True
             self.pathfinder.find_path(self.path[len(self.path)-1] if \
             self.path else self.snake[0], self.target)
 
+        # Test if an enemy snake is in sight and open fire
+        # This is not really completed since the bot never stops firing.
         if self.snake.heading is not None:
             ray = add_vecs(self.snake[0], self.snake.heading)
             while True:
                 ray = add_vecs(ray, self.snake.heading)
 
+                if ray in self.game.tilemap.tiles or not \
+                self.game.in_bounds(ray):
+                    break
+
                 for player in self.game.players:
-                    if player._id == self._id:
+                    if player.pid == self.pid:
                         continue
                     if ray in player.snake:
                         self.weapons[0].set_firing(True)
                         break
 
-                if ray in self.game._map.tiles or not \
-                self.game.in_bounds(ray):
-                    break
-
+        # Compute new heading
         if self.path and self.next_tile == self.snake[0]:
             self.next_tile = self.path.pop(0)
 
@@ -255,9 +257,11 @@ class Bot(PlayerBase):
             elif angle == 0.0:
                 self.snake.set_heading(DOWN)
 
-            if self.game._map.on_edge(self.snake[0]) and \
-            self.game._map.on_edge(self.next_tile):
-                # Invert heading
+            # Invert heading in case the path takes advantage of the
+            # toroidal nature of the map. Otherwise the snake would move
+            # across the whole entire fucking map.
+            if self.game.tilemap.on_edge(self.snake[0]) and \
+            self.game.tilemap.on_edge(self.next_tile):
                 self.snake.set_heading((-self.snake.heading[0],
                 -self.snake.heading[1]))
 

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Contains useful functions/classes"""
 
 def add_vecs(vec1, vec2):

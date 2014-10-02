@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 A* Pathfinding implementation.
 """
@@ -40,21 +41,31 @@ class Pathfinder(object):
             self.blocked[tile] = True
 
     def on_search_done(self, success, path):
+        """Fire up search done event."""
         self.search_done_listener(success, path)
 
     def find_path(self, start, dest):
+        """
+        Public find_path method which starts the search in a
+        seperate thread.
+        """
         thread.start_new_thread(self._find_path, (start, dest))
 
     def _find_path(self, start, dest):
-        """"""
+        """
+        Find path from start to dest.
+
+        Triggers the search done listener to notify user.
+        """
         self.open_lst = set()
         self.closed_lst = set()
-        
+
         path = []
         self.open_lst.add(start)
 
         while len(self.open_lst) != 0:
-
+            # Get the node with the lowest f score
+            # This can be improved my using a priority queue (heapq)
             lowest_f = 999999
             node_lowest_f = None
             for node in self.open_lst:
@@ -68,23 +79,24 @@ class Pathfinder(object):
             self.closed_lst.add(curr_node)
 
             if curr_node == dest:
+                # Retrace path
                 parent = self.parent[curr_node]
-                
+
                 while parent != start:
-                    # Retrace path
                     path.append(parent)
                     parent = self.parent[parent]
 
                 path = list(reversed(path))
                 path.append(dest)
                 self.on_search_done(True, path)
-                return 
+                return
 
             self.expand_node(curr_node, dest)
 
         self.on_search_done(False, None)
 
     def expand_node(self, curr_node, dest):
+        """Expand node."""
         for neigh in self.get_adjacent(curr_node):
 
             if self.blocked[neigh]:
@@ -103,29 +115,39 @@ class Pathfinder(object):
             self.g_cost[neigh] = tentative_g
 
             if self.heuristic == MANHATTEN_DISTANCE:
-                f = tentative_g + abs(dest[0] - neigh[0]) + \
+                f_score = tentative_g + abs(dest[0] - neigh[0]) + \
                 abs(dest[1] - neigh[1])
             elif self.heuristic == EUCLIDIAN_DISTANCE:
-                f = tentative_g + sqrt(pow(dest[0] - neigh[0], 2) + \
+                f_score = tentative_g + sqrt(pow(dest[0] - neigh[0], 2) + \
                 pow(dest[1] - neigh[1], 2))
 
-            self.f_cost[neigh] = f
+            self.f_cost[neigh] = f_score
 
             if neigh not in self.open_lst:
                 self.open_lst.add(neigh)
 
     def get_adjacent(self, pos):
-        if pos[0] > 0: 
+        """
+        Get nodes that are adjacent to pos even if they are portals.
+        """
+        # I know this looks pretty messy,
+        # but what it does is real simple: If an adjacent node is
+        # outside of the map's bounds, move it to the opposite side as if
+        # the map was a torus. If it is not outside of the map, then
+        # there are two options: It is just a normal node and simply
+        # yielded or it is a portal and the portal's end-point is
+        # yielded.
+        if pos[0] > 0:
             if (pos[0]-1, pos[1]) not in self.portals:
-                yield (pos[0]-1, pos[1])  
-            else: 
+                yield (pos[0]-1, pos[1])
+            else:
                 yield add_vecs(self.portals[(pos[0]-1, pos[1])][0],
                                self.portals[(pos[0]-1, pos[1])][1])
         else:
             yield (self.cols-1, pos[1])
         if pos[1] < self.rows-1:
             if (pos[0], pos[1]+1) not in self.portals:
-                yield (pos[0], pos[1]+1)  
+                yield (pos[0], pos[1]+1)
             else:
                 yield add_vecs(self.portals[(pos[0], pos[1]+1)][0],
                                self.portals[(pos[0], pos[1]+1)][1])
@@ -133,7 +155,7 @@ class Pathfinder(object):
             yield (pos[0], 0)
         if pos[0] < self.cols-1:
             if (pos[0]+1, pos[1]) not in self.portals:
-                yield (pos[0]+1, pos[1])  
+                yield (pos[0]+1, pos[1])
             else:
                 yield add_vecs(self.portals[(pos[0]+1, pos[1])][0],
                                self.portals[(pos[0]+1, pos[1])][1])
@@ -142,7 +164,7 @@ class Pathfinder(object):
         if pos[1] > 0:
             if (pos[0], pos[1]-1) not in self.portals:
                 yield (pos[0], pos[1]-1)
-            else: 
+            else:
                 yield add_vecs(self.portals[(pos[0], pos[1]-1)][0],
                                self.portals[(pos[0], pos[1]-1)][1])
         else:

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """Settings."""
 
 INVINCIBILITY_BLINK_RATE = 0.1

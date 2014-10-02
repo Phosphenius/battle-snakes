@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
 
 '''Main module of the game'''
 
@@ -20,7 +21,7 @@ from map import Map
 from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
 PORTAL_TAG, PWRUP_TAG, SHOT_TAG, WALL_TAG)
 
-VERSION = 'v0.1.0'
+VERSION = 'v0.2.0'
 
 def quit_game():
     """Quit the game."""
@@ -108,7 +109,7 @@ class BattleSnakesGame(object):
         pygame.init()
         pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 
-        self.randomizer = random.Random(1)
+        self.randomizer = random.Random()
         self.sysfont = pygame.font.SysFont('Arial', 14)
         self.screen = pygame.display.set_mode(res)
         self.fps_clock = pygame.time.Clock()
@@ -116,7 +117,7 @@ class BattleSnakesGame(object):
         self.graphics = GraphicsManager(self.screen)
         self.pwrup_manager = PowerupManager(self)
         self.shot_manager = ShotManager(self)
-        self._map = Map(self, '../data/maps/map02.xml')
+        self.tilemap = Map(self, '../data/maps/map02.xml')
 
         self.spatialhash = defaultdict(list)
 
@@ -144,27 +145,27 @@ class BattleSnakesGame(object):
         '''Treats 'obj' as if the playfield was toroidal'''
         xpos, ypos = obj
         if xpos < 0:
-            obj = (self._map.width-1, ypos)
-        if xpos > self._map.width-1:
+            obj = (self.tilemap.width-1, ypos)
+        if xpos > self.tilemap.width-1:
             obj = (0, ypos)
         if ypos < 0:
-            obj = (xpos, self._map.height-1)
-        if ypos > self._map.height-1:
+            obj = (xpos, self.tilemap.height-1)
+        if ypos > self.tilemap.height-1:
             obj = (xpos, 0)
         return obj
 
     def get_spawnpoint(self):
         """Return  random, unblocked spawnpoint."""
         return self.randomizer.choice([spawnpoint for spawnpoint in \
-        self._map.spawnpoints \
+        self.tilemap.spawnpoints \
         if self.sp_unblocked(spawnpoint)])
 
     def randpos(self):
         """Return random position."""
         while True:
-            pos = (self.randomizer.randint(1, self._map.width-1),
-            self.randomizer.randint(1, self._map.height-1))
-            if pos not in self.spatialhash and pos not in self._map.tiles:
+            pos = (self.randomizer.randint(1, self.tilemap.width-1),
+            self.randomizer.randint(1, self.tilemap.height-1))
+            if pos not in self.spatialhash and pos not in self.tilemap.tiles:
                 return pos
 
     def isunblocked(self, pos):
@@ -172,8 +173,10 @@ class BattleSnakesGame(object):
         return len(self.spatialhash.get(pos, [])) == 0
 
     def in_bounds(self, pos):
-        return pos[0] >= 0 and pos[0] <= self._map.width and \
-        pos[1] >= 0 and pos[1] <= self._map.height
+        """Determine if pos is in bounds of the map."""
+        # I think, this methods belongs to the map class...
+        return pos[0] >= 0 and pos[0] <= self.tilemap.width and \
+        pos[1] >= 0 and pos[1] <= self.tilemap.height
 
     def sp_unblocked(self, spawnpoint):
         """Determine if a spawnpoint is blocked."""
@@ -184,12 +187,12 @@ class BattleSnakesGame(object):
         self.spatialhash.clear()
 
         # Add spawnpoints (So powerups don't appear on them)
-        for spawnpoint in self._map.spawnpoints:
+        for spawnpoint in self.tilemap.spawnpoints:
             self.spatialhash[spawnpoint].append((SPAWNPOINT_TAG,
             spawnpoint))
 
         # Add portals
-        for portal_key, portal_val in self._map.portals.items():
+        for portal_key, portal_val in self.tilemap.portals.items():
             self.spatialhash[portal_key].append((PORTAL_TAG, portal_val))
 
         # Add powerups
@@ -230,17 +233,17 @@ class BattleSnakesGame(object):
     def handle_collisions(self):
         """Handle collisions."""
         for player in self.players:
-            if player.snake[0] in self._map.tiles:
+            if player.snake[0] in self.tilemap.tiles:
                 player.snake.take_damage(20, WALL_TAG, True, True, 1,
                 shrink=0, slowdown=0.07)
                 break
 
         for shot in self.shot_manager.shot_pool:
-            if shot.pos in self._map.tiles:
+            if shot.pos in self.tilemap.tiles:
                 shot.hit()
-            if shot.pos in self._map.portals:
-                shot.heading = self._map.portals[shot.pos][1]
-                shot.pos = add_vecs(self._map.portals[shot.pos][0],
+            if shot.pos in self.tilemap.portals:
+                shot.heading = self.tilemap.portals[shot.pos][1]
+                shot.pos = add_vecs(self.tilemap.portals[shot.pos][0],
                 shot.heading)
 
         for entries in self.spatialhash.values():
@@ -255,11 +258,11 @@ class BattleSnakesGame(object):
     def draw(self):
         """Render."""
 
-        # Show the bots path for debugging purposes.
-        for tile in self.players[1].path:
-            self.graphics.draw('spawnpoint', tile)
+        # Show the first bots path for debugging purposes.
+        #~ for tile in self.players[1].path:
+            #~ self.graphics.draw('spawnpoint', tile)
 
-        self._map.draw()
+        self.tilemap.draw()
 
         self.pwrup_manager.draw()
         self.shot_manager.draw()
