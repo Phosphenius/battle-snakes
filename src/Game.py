@@ -171,6 +171,10 @@ class BattleSnakesGame(object):
         """Test if a cell is blocked by something."""
         return len(self.spatialhash.get(pos, [])) == 0
 
+    def in_bounds(self, pos):
+        return pos[0] >= 0 and pos[0] <= self._map.width and \
+        pos[1] >= 0 and pos[1] <= self._map.height
+
     def sp_unblocked(self, spawnpoint):
         """Determine if a spawnpoint is blocked."""
         return len(self.spatialhash[spawnpoint]) == 1
@@ -250,6 +254,11 @@ class BattleSnakesGame(object):
 
     def draw(self):
         """Render."""
+
+        # Show the bots path for debugging purposes.
+        for tile in self.players[1].path:
+            self.graphics.draw('spawnpoint', tile)
+
         self._map.draw()
 
         self.pwrup_manager.draw()
@@ -260,10 +269,6 @@ class BattleSnakesGame(object):
 
         for i, player in enumerate(self.players):
             player.draw(mul_vec((290, 0), i))
-
-        # Show the bots path for debugging purposes.
-        for tile in self.players[1].path:
-            self.graphics.draw('shot1', tile)
 
         self.draw_string('FPS: {0:.2f}'.
         format(self.fps_clock.get_fps()), (1200, 2), WHITE)

@@ -55,6 +55,11 @@ class Map(object):
                                 {point1:(point2, p2_dir),
                                 point2:(point1, p1_dir)})
 
+    def on_edge(self, pos):
+        """Determines if pos is on the edge of the map."""
+        return pos[0] == 0 or pos[0] == self.width-1 or \
+               pos[1] == 0 or pos[1] == self.height-1
+
     def draw(self):
         """Draw map."""
         for tile in self.tiles:

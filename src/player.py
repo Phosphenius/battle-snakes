@@ -181,11 +181,25 @@ class PlayerBase(object):
             self.boost = MAX_BOOST
             self.snake.respawn(self.game.get_spawnpoint())
 
+class BotAttackState(object):
+    def __init__(self):
+        pass
+
+    def update(self, delta_time):
+        pass
+
+class BotCollectState(object):
+    def __init__(self):
+        pass
+
+    def update(self, delta_time):
+        pass
+
 class Bot(PlayerBase):
     def __init__(self, game, config):
         PlayerBase.__init__(self, game, config)
-        
-        self.pathfinder = Pathfinder(self.game._map, MANHATTEN_DISTANCE, 
+
+        self.pathfinder = Pathfinder(self.game._map, MANHATTEN_DISTANCE,
         self.pathfinder_search_done)
 
         self.searching = False
@@ -193,22 +207,42 @@ class Bot(PlayerBase):
         self.next_tile = self.snake[0]
         self.target = None
 
+    def change_state(self, new_state):
+        pass
+
     def pathfinder_search_done(self, success, path):
         self.searching = False
         if success:
             self.path.extend(path)
 
     def update(self, delta_time):
-        if len(self.path) <= 20 and not self.searching:
+        if len(self.path) <= 24 and not self.searching:
             prev_target = self.target
             self.target = \
             self.game.randomizer.choice(self.game.pwrup_manager.get_powerups()).pos
             self.searching = True
-            self.pathfinder.find_path(self.target, 
-            self.path[len(self.path)-1] if self.path else self.snake[0])
-        
+            self.pathfinder.find_path(self.path[len(self.path)-1] if \
+            self.path else self.snake[0], self.target)
+
+        if self.snake.heading is not None:
+            ray = add_vecs(self.snake[0], self.snake.heading)
+            while True:
+                ray = add_vecs(ray, self.snake.heading)
+
+                for player in self.game.players:
+                    if player._id == self._id:
+                        continue
+                    if ray in player.snake:
+                        self.weapons[0].set_firing(True)
+                        break
+
+                if ray in self.game._map.tiles or not \
+                self.game.in_bounds(ray):
+                    break
+
         if self.path and self.next_tile == self.snake[0]:
             self.next_tile = self.path.pop(0)
+
             angle = degrees(atan2(*sub_vecs(self.next_tile,
             self.snake[0])))
 
@@ -220,6 +254,12 @@ class Bot(PlayerBase):
                 self.snake.set_heading(UP)
             elif angle == 0.0:
                 self.snake.set_heading(DOWN)
+
+            if self.game._map.on_edge(self.snake[0]) and \
+            self.game._map.on_edge(self.next_tile):
+                # Invert heading
+                self.snake.set_heading((-self.snake.heading[0],
+                -self.snake.heading[1]))
 
         PlayerBase.update(self, delta_time)
 

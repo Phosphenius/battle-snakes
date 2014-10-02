@@ -6,6 +6,8 @@ from math import sqrt
 import thread
 from collections import defaultdict
 
+from utils import add_vecs
+
 # Heuristics
 MANHATTEN_DISTANCE = 0
 EUCLIDIAN_DISTANCE = 1
@@ -73,7 +75,8 @@ class Pathfinder(object):
                     path.append(parent)
                     parent = self.parent[parent]
 
-                path.append(start)
+                path = list(reversed(path))
+                path.append(dest)
                 self.on_search_done(True, path)
                 return 
 
@@ -116,27 +119,31 @@ class Pathfinder(object):
             if (pos[0]-1, pos[1]) not in self.portals:
                 yield (pos[0]-1, pos[1])  
             else: 
-                yield self.portals[(pos[0]-1, pos[1])][0]
+                yield add_vecs(self.portals[(pos[0]-1, pos[1])][0],
+                               self.portals[(pos[0]-1, pos[1])][1])
         else:
             yield (self.cols-1, pos[1])
         if pos[1] < self.rows-1:
             if (pos[0], pos[1]+1) not in self.portals:
                 yield (pos[0], pos[1]+1)  
             else:
-                yield self.portals[(pos[0], pos[1]+1)][0]
+                yield add_vecs(self.portals[(pos[0], pos[1]+1)][0],
+                               self.portals[(pos[0], pos[1]+1)][1])
         else:
             yield (pos[0], 0)
         if pos[0] < self.cols-1:
             if (pos[0]+1, pos[1]) not in self.portals:
                 yield (pos[0]+1, pos[1])  
             else:
-                yield self.portals[(pos[0]+1, pos[1])][0]
+                yield add_vecs(self.portals[(pos[0]+1, pos[1])][0],
+                               self.portals[(pos[0]+1, pos[1])][1])
         else:
             yield (0, pos[1])
         if pos[1] > 0:
             if (pos[0], pos[1]-1) not in self.portals:
                 yield (pos[0], pos[1]-1)
             else: 
-                yield self.portals[(pos[0], pos[1]-1)][0]
+                yield add_vecs(self.portals[(pos[0], pos[1]-1)][0],
+                               self.portals[(pos[0], pos[1]-1)][1])
         else:
             yield (pos[0], self.rows-1)
