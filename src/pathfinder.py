@@ -4,6 +4,7 @@ A* Pathfinding implementation.
 
 from math import sqrt
 import thread
+from collections import defaultdict
 
 # Heuristics
 MANHATTEN_DISTANCE = 0
@@ -23,26 +24,18 @@ class Pathfinder(object):
 
         self.cols = _map.width
         self.rows = _map.height
+        self.portals = _map.portals
 
         self.search_done_listener = search_done_listener
 
-        # Node data.
-        self.blocked = self._init_d2_lst(False)
-        self.parent = self._init_d2_lst()
-        self.g_cost = self._init_d2_lst(0)
-        self.h_cost = self._init_d2_lst(0)
-        self.f_cost = self._init_d2_lst(0)
+        self.blocked = defaultdict(bool)
+        self.parent = defaultdict(tuple)
+        self.g_cost = defaultdict(int)
+        self.h_cost = defaultdict(int)
+        self.f_cost = defaultdict(int)
 
         for tile in _map.tiles:
-            self.blocked[tile[0]+1][tile[1]+1] = True
-
-        for col in range(self.cols+2):
-            self.blocked[col][0] = True
-            self.blocked[col][self.rows+1] = True
-
-        for row in range(self.rows+2):
-            self.blocked[0][row] = True
-            self.blocked[self.cols+1][row] = True
+            self.blocked[tile] = True
 
     def on_search_done(self, success, path):
         self.search_done_listener(success, path)
@@ -56,17 +49,15 @@ class Pathfinder(object):
         self.closed_lst = set()
         
         path = []
-        start_node = (start[0]+1, start[1]+1)
-        dest_node = (dest[0]+1, dest[1]+1)
-        self.open_lst.add(start_node)
+        self.open_lst.add(start)
 
         while len(self.open_lst) != 0:
 
             lowest_f = 999999
             node_lowest_f = None
             for node in self.open_lst:
-                if self.f_cost[node[0]][node[1]] < lowest_f:
-                    lowest_f = self.f_cost[node[0]][node[1]]
+                if self.f_cost[node] < lowest_f:
+                    lowest_f = self.f_cost[node]
                     node_lowest_f = node
 
             curr_node = node_lowest_f
@@ -74,63 +65,78 @@ class Pathfinder(object):
             self.open_lst.remove(curr_node)
             self.closed_lst.add(curr_node)
 
-            if curr_node == dest_node:
-                parent = self.parent[curr_node[0]][curr_node[1]]
+            if curr_node == dest:
+                parent = self.parent[curr_node]
                 
-                while parent != start_node:
+                while parent != start:
                     # Retrace path
-                    path.append((parent[0]-1, parent[1]-1))
-                    parent = self.parent[parent[0]][parent[1]]
+                    path.append(parent)
+                    parent = self.parent[parent]
 
                 path.append(start)
                 self.on_search_done(True, path)
                 return 
 
-            self.expand_node(curr_node, dest_node)
+            self.expand_node(curr_node, dest)
 
         self.on_search_done(False, None)
 
-    def expand_node(self, curr_node, dest_node):
+    def expand_node(self, curr_node, dest):
         for neigh in self.get_adjacent(curr_node):
 
-            if self.blocked[neigh[0]][neigh[1]]:
+            if self.blocked[neigh]:
                 continue
 
             if neigh in self.closed_lst:
                 continue
 
-            tentative_g = self.g_cost[curr_node[0]][curr_node[1]] + 10
+            tentative_g = self.g_cost[curr_node] + 10
 
             if neigh in self.open_lst and \
-            tentative_g >= self.g_cost[curr_node[0]][curr_node[1]]:
+            tentative_g >= self.g_cost[curr_node]:
                 continue
 
-            self.parent[neigh[0]][neigh[1]] = curr_node
-            self.g_cost[neigh[0]][neigh[1]] = tentative_g
+            self.parent[neigh] = curr_node
+            self.g_cost[neigh] = tentative_g
 
             if self.heuristic == MANHATTEN_DISTANCE:
-                f = tentative_g + abs(dest_node[0] - neigh[0]) + \
-                abs(dest_node[1] - neigh[1])
+                f = tentative_g + abs(dest[0] - neigh[0]) + \
+                abs(dest[1] - neigh[1])
             elif self.heuristic == EUCLIDIAN_DISTANCE:
-                f = tentative_g + sqrt(pow(dest_node[0] - neigh[0], 2) +\
-                pow(dest_node[1] - neigh[1], 2))
+                f = tentative_g + sqrt(pow(dest[0] - neigh[0], 2) + \
+                pow(dest[1] - neigh[1], 2))
 
-            self.f_cost[neigh[0]][neigh[1]] = f
+            self.f_cost[neigh] = f
 
             if neigh not in self.open_lst:
                 self.open_lst.add(neigh)
 
     def get_adjacent(self, pos):
-        yield (pos[0]-1, pos[1])
-        yield (pos[0], pos[1]+1)
-        yield (pos[0]+1, pos[1])
-        yield (pos[0], pos[1]-1)
-        # No diagonal movement
-        #~ yield (pos[0]+1, pos[1]-1)
-        #~ yield (pos[0]+1, pos[1]+1)
-        #~ yield (pos[0]-1, pos[1]+1)
-        #~ yield (pos[0]-1, pos[1]-1)
-
-    def _init_d2_lst(self, init_val=None):
-        return [[init_val for i in range(self.rows+2)] \
-        for i in range(self.cols+2)]
+        if pos[0] > 0: 
+            if (pos[0]-1, pos[1]) not in self.portals:
+                yield (pos[0]-1, pos[1])  
+            else: 
+                yield self.portals[(pos[0]-1, pos[1])][0]
+        else:
+            yield (self.cols-1, pos[1])
+        if pos[1] < self.rows-1:
+            if (pos[0], pos[1]+1) not in self.portals:
+                yield (pos[0], pos[1]+1)  
+            else:
+                yield self.portals[(pos[0], pos[1]+1)][0]
+        else:
+            yield (pos[0], 0)
+        if pos[0] < self.cols-1:
+            if (pos[0]+1, pos[1]) not in self.portals:
+                yield (pos[0]+1, pos[1])  
+            else:
+                yield self.portals[(pos[0]+1, pos[1])][0]
+        else:
+            yield (0, pos[1])
+        if pos[1] > 0:
+            if (pos[0], pos[1]-1) not in self.portals:
+                yield (pos[0], pos[1]-1)
+            else: 
+                yield self.portals[(pos[0], pos[1]-1)][0]
+        else:
+            yield (pos[0], self.rows-1)
