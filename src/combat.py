@@ -14,6 +14,9 @@ STD_MG = {'shot':MG_SHOT1, 'type':'MG', 'ammo':999999, 'freq':8}
 H_GUN = {'shot':SHOT1, 'type':'Cannon', 'ammo':20, 'freq':1.3}
 PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'Plasma', 'ammo':50, 'freq':2.5}
 
+DEFAULT_SHOT_BLINK_RATE = 100000
+DEFAULT_SHOT_LIFETIME = 5
+
 class Shot(object):
     """Represents a shot."""
     def __init__(self, game, pos, heading, tag, config):
@@ -22,6 +25,7 @@ class Shot(object):
         self.isvisible = True
         self.elapsed_t = 0
         self.elapsed_blink = 0
+        self.elapsed_lifetime = 0
         self.pos = pos
         self.heading = heading
         self.tag = tag
@@ -29,7 +33,8 @@ class Shot(object):
         self.damage = config.get('damage', 0)
         self.speed = 1. / config['speed']
         self.slowdown = config.get('slowdown', 0)
-        self.blinkrate = config.get('blinkrate', 100000)
+        self.blinkrate = config.get('blinkrate', DEFAULT_SHOT_BLINK_RATE)
+        self.lifetime = config.get('lifetime', DEFAULT_SHOT_LIFETIME)
 
         self.reinit(pos, heading, tag, config)
 
@@ -39,6 +44,7 @@ class Shot(object):
         self.isvisible = True
         self.elapsed_t = 0
         self.elapsed_blink = 0
+        self.elapsed_lifetime = 0
         self.pos = pos
         self.heading = heading
         self.tag = tag
@@ -46,7 +52,8 @@ class Shot(object):
         self.damage = config.get('damage', 0)
         self.speed = 1. / config['speed']
         self.slowdown = config.get('slowdown', 0)
-        self.blinkrate = config.get('blinkrate', 100000)
+        self.blinkrate = config.get('blinkrate', DEFAULT_SHOT_BLINK_RATE)
+        self.lifetime = config.get('lifetime', DEFAULT_SHOT_LIFETIME)
 
     def hit(self):
         """Tell the shot that it has hit something."""
@@ -56,6 +63,7 @@ class Shot(object):
         """Update shot."""
         self.elapsed_t += delta_time
         self.elapsed_blink += delta_time
+        self.elapsed_lifetime += delta_time
 
         if self.elapsed_t >= self.speed:
             self.elapsed_t -= self.speed
@@ -65,6 +73,9 @@ class Shot(object):
         if self.elapsed_blink >= self.blinkrate:
             self.elapsed_blink -= self.blinkrate
             self.isvisible = not self.isvisible
+            
+        if self.elapsed_lifetime >= self.lifetime:
+            self.hit()
 
     def draw(self):
         """Draw shot."""
