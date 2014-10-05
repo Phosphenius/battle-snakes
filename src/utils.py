@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """Contains useful functions/classes"""
 
+from math import hypot
+
 def add_vecs(vec1, vec2):
     """Add vectors."""
     return (vec1[0] + vec2[0], vec1[1] + vec2[1])
@@ -12,6 +14,10 @@ def sub_vecs(vec1, vec2):
 def mul_vec(vec, scalar):
     """Multiply vector with scalar."""
     return (vec[0] * scalar, vec[1] * scalar)
+
+def distance(vec1, vec2):
+    """Compute distance between vec1 and vec2."""
+    return hypot(vec1[0] - vec2[0], vec1[1] - vec2[1])
 
 def str_to_vec(data):
     """Convert string rep. of a vector to tuple."""

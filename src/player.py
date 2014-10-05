@@ -13,7 +13,7 @@ K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 from pathfinder import Pathfinder, MANHATTEN_DISTANCE
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
-from utils import add_vecs, sub_vecs
+from utils import add_vecs, sub_vecs, distance
 from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN
 from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
 BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG, PWRUP_TAG, SHOT_TAG,
@@ -261,12 +261,13 @@ class Bot(PlayerBase):
             # toroidal nature of the map. Otherwise the snake would move
             # across the whole entire fucking map.
             if self.game.tilemap.on_edge(self.snake[0]) and \
-            self.game.tilemap.on_edge(self.next_tile):
+            self.game.tilemap.on_edge(self.next_tile) and \
+            distance(self.snake[0], self.next_tile) > 1:
                 self.snake.set_heading((-self.snake.heading[0],
                 -self.snake.heading[1]))
 
         PlayerBase.update(self, delta_time)
-
+    
 class Player(PlayerBase):
 
     """

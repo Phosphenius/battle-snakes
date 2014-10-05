@@ -21,7 +21,7 @@ from map import Map
 from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
 PORTAL_TAG, PWRUP_TAG, SHOT_TAG, WALL_TAG)
 
-VERSION = 'v0.2.0'
+VERSION = 'v0.2.1'
 
 def quit_game():
     """Quit the game."""
