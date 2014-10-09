@@ -213,12 +213,11 @@ class Bot(PlayerBase):
         # Select new target and compute new path to it if remaining path
         # becomes too short.
         if len(self.path) <= 24 and not self.searching:
-            # We just select a random target here which in rare cases
-            # causes a bug if we select the same target twice.
-            # GET THIS FIXED!
-            self.target = \
-            self.game.randomizer.choice(
-            self.game.pwrup_manager.get_powerups()).pos
+            prev_target = self.target
+            while prev_target == self.target:
+                self.target = \
+                self.game.randomizer.choice(
+                self.game.pwrup_manager.get_powerups()).pos
             self.searching = True
             self.pathfinder.find_path(self.path[len(self.path)-1] if \
             self.path else self.snake[0], self.target)
