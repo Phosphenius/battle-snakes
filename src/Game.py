@@ -10,7 +10,7 @@ import random
 from collections import defaultdict
 
 import pygame
-from pygame.locals import QUIT, K_q, K_ESCAPE
+from pygame.locals import QUIT, K_q, K_ESCAPE, K_F5, K_F6, K_F7
 
 from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
@@ -19,7 +19,7 @@ from player import Player, Bot, PLAYER1, BOT
 from combat import ShotManager
 from map import Map
 from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
-PORTAL_TAG, PWRUP_TAG, SHOT_TAG, WALL_TAG)
+                      PORTAL_TAG, PWRUP_TAG, SHOT_TAG, WALL_TAG)
 
 VERSION = 'v0.2.1'
 
@@ -118,6 +118,8 @@ class BattleSnakesGame(object):
         self.pwrup_manager = PowerupManager(self)
         self.shot_manager = ShotManager(self)
         self.tilemap = Map(self, '../data/maps/map02.xml')
+
+        self.game_speed = 1
 
         self.spatialhash = defaultdict(list)
 
@@ -228,6 +230,13 @@ class BattleSnakesGame(object):
         if self.key_manager.any_pressed(K_q, K_ESCAPE):
             quit_game()
 
+        if self.key_manager.key_tapped(K_F5) and self.game_speed < 9.9:
+            self.game_speed += 0.1
+        elif self.key_manager.key_tapped(K_F6) and self.game_speed > 0.1:
+            self.game_speed -= 0.1
+        elif self.key_manager.key_tapped(K_F7):
+            self.game_speed = 1
+
         self.handle_collisions()
 
     def handle_collisions(self):
@@ -276,6 +285,9 @@ class BattleSnakesGame(object):
         self.draw_string('FPS: {0:.2f}'.
         format(self.fps_clock.get_fps()), (1200, 2), WHITE)
 
+        self.draw_string('Game speed: {0:.2f}'.format(self.game_speed),
+                         (1155, 22), WHITE)
+
     def draw_string(self, text, pos, color):
         """Draw string."""
         self.screen.blit(self.sysfont.render(text, True, color), pos)
@@ -287,7 +299,7 @@ class BattleSnakesGame(object):
                 if event.type == QUIT:
                     quit_game()
             self.screen.fill(BLACK)
-            delta_time = self.fps_clock.tick(60) / 1000.0
+            delta_time = (self.fps_clock.tick() / 1000.0) * self.game_speed
             self.update(delta_time)
             self.draw()
             pygame.display.update()
