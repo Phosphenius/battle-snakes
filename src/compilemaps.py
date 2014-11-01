@@ -20,6 +20,7 @@ from utils import vec_lst_to_str
 MAP_SRC_DIR = '../data/mapsources'
 MAP_DEST_DIR = '../data/maps'
 
+
 def create_vec_lst_tag(tag_name, lst):
     """Creates an XML tag containing the specified vector list."""
     tag = dom.Element(tag_name)
@@ -27,6 +28,7 @@ def create_vec_lst_tag(tag_name, lst):
     text.data = vec_lst_to_str(lst)
     tag.appendChild(text)
     return tag
+
 
 def main():
     """Here is where the magic happens."""

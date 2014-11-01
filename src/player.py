@@ -8,7 +8,7 @@ from math import atan2, degrees
 
 import pygame
 from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
-K_a, K_d, K_w, K_s, K_c, K_v, K_b)
+                           K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 
 from pathfinder import Pathfinder, MANHATTEN_DISTANCE
 from colors import WHITE, RED, ORANGE, BLUE
@@ -16,21 +16,25 @@ from snake import Snake, LEFT, RIGHT, UP, DOWN
 from utils import add_vecs, sub_vecs, distance
 from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN
 from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
-BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG, PWRUP_TAG, SHOT_TAG,
-MAX_HITPOINTS)
+                      BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
+                      PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
 
 # -- Controls --
-CTRLS1 = {'left':K_LEFT, 'right':K_RIGHT, 'up':K_UP, 'down':K_DOWN,
-'action':K_l, 'boost':K_k, 'nextweapon':K_j}
-CTRLS2 = {'left':K_a, 'right':K_d, 'up':K_w, 'down':K_s, 'action':K_c,
-'boost':K_v, 'nextweapon':K_b}
+CTRLS1 = {'left': K_LEFT, 'right': K_RIGHT, 'up': K_UP, 'down': K_DOWN,
+          'action': K_l, 'boost': K_k, 'nextweapon': K_j}
+
+CTRLS2 = {'left': K_a, 'right': K_d, 'up': K_w, 'down': K_s, 'action': K_c,
+          'boost': K_v, 'nextweapon': K_b}
 
 # -- Players --
-PLAYER1 = {'id':'1', 'color':BLUE, 'ctrls':CTRLS1,
-'tex':'snake_body_p1'}
-PLAYER2 = {'id':'2', 'color':RED, 'ctrls':CTRLS2,
-'tex':'snake_body_p2'}
-BOT = {'id':2, 'color':RED, 'tex':'snake_body_p2'}
+PLAYER1 = {'id': '1', 'color': BLUE, 'ctrls': CTRLS1,
+           'tex': 'snake_body_p1'}
+
+PLAYER2 = {'id': '2', 'color': RED, 'ctrls': CTRLS2,
+           'tex': 'snake_body_p2'}
+
+BOT = {'id': 2, 'color': RED, 'tex': 'snake_body_p2'}
+
 
 class PlayerBase(object):
 
@@ -43,19 +47,18 @@ class PlayerBase(object):
         self.pid = config['id']
         self.color = config['color']
         self.snake = Snake(game, game.get_spawnpoint(),
-        config['tex'], self.pid, self.snake_killed)
+                           config['tex'], self.pid, self.snake_killed)
         self._lifes = INIT_LIFES
         self.points = 0
         self._boost = INIT_BOOST
         self.boosting = False
         self.weapons = deque((
-        Weapon(self.game, self, STD_MG),
-        Weapon(self.game, self, H_GUN),
-        Weapon(self.game, self, PLASMA_GUN)))
-        self.pwrup_targets = {
-        'points':'points', 'grow' :'snake.grow', 'speed':'snake.speed',
-        'boost' :'boost', 'lifes':'lifes',
-        'hp':'snake.hitpoints'}
+            Weapon(self.game, self, STD_MG),
+            Weapon(self.game, self, H_GUN),
+            Weapon(self.game, self, PLASMA_GUN)))
+        self.pwrup_targets = {'points': 'points', 'grow': 'snake.grow',
+                              'speed': 'snake.speed', 'boost': 'boost',
+                              'lifes': 'lifes', 'hp': 'snake.hitpoints'}
 
     @property
     def lifes(self):
@@ -91,9 +94,9 @@ class PlayerBase(object):
         """Handle collisions for the snake's head."""
         for tag, obj in collobjs:
             if (tag.endswith('-body') or tag.endswith('-head')) and \
-            tag != self.snake.head_tag:
+                    tag != self.snake.head_tag:
                 obj.take_damage(35, self.snake.head_tag, False, True,
-                0.7, shrink=1, slowdown=0.03)
+                                0.7, shrink=1, slowdown=0.03)
             elif tag == PORTAL_TAG:
                 self.snake.heading = obj[1]
                 self.snake[0] = add_vecs(obj[0], self.snake.heading)
@@ -104,7 +107,7 @@ class PlayerBase(object):
                         target1, target2 = target.split('.')
                         attr = getattr(getattr(self, target1), target2)
                         setattr(getattr(self, target1),
-                        target2, attr + action['value'])
+                                target2, attr + action['value'])
                     else:
                         attr = getattr(self, target)
                         setattr(self, target, attr + action['value'])
@@ -121,7 +124,7 @@ class PlayerBase(object):
     def handle_shot(self, shot):
         """Handle shot."""
         self.snake.take_damage(shot.damage, shot.tag, False, True, 1.2,
-        slowdown=shot.slowdown, shrink=1)
+                               slowdown=shot.slowdown, shrink=1)
         shot.hit()
 
     def update(self, delta_time):
@@ -146,35 +149,35 @@ class PlayerBase(object):
         else:
             self.boost = self.boost + BOOST_GAIN * delta_time
 
-
     def draw(self, offset):
         """Draw snake and UI."""
         self.snake.draw()
         self.game.draw_string('Player{0}'.format(self.pid),
-        add_vecs((2, 2), offset), self.color)
+                              add_vecs((2, 2), offset), self.color)
         self.game.draw_string('{0:.2f}'.format(self.snake.speed),
-        add_vecs((56, 2), offset), WHITE)
+                              add_vecs((56, 2), offset), WHITE)
         self.game.draw_string('Points: {0}'.format(self.points),
-        add_vecs((2, 18), offset), WHITE)
+                              add_vecs((2, 18), offset), WHITE)
 
         pygame.draw.rect(self.game.screen, ORANGE,
-        pygame.Rect(add_vecs((100, 2), offset), (104, 20)))
+                         pygame.Rect(add_vecs((100, 2), offset), (104, 20)))
 
         pygame.draw.rect(self.game.screen, RED,
-        pygame.Rect(add_vecs((102, 4), offset), (int(
-        self.snake.hitpoints / float(MAX_HITPOINTS) * 100), 7)))
+                         pygame.Rect(add_vecs((102, 4), offset), (int(
+                             self.snake.hitpoints /
+                             float(MAX_HITPOINTS) * 100), 7)))
 
         pygame.draw.rect(self.game.screen, BLUE,
-        pygame.Rect(add_vecs((102, 13), offset), (int(
-        self.boost / float(MAX_BOOST) * 100), 7)))
+                         pygame.Rect(add_vecs((102, 13), offset), (int(
+                             self.boost / float(MAX_BOOST) * 100), 7)))
 
         self.game.draw_string('{0} {1}'.format(self.weapons[0].wtype,
-        self.weapons[0].ammo),
-        add_vecs((208, 2), offset), WHITE)
+                                               self.weapons[0].ammo),
+                              add_vecs((208, 2), offset), WHITE)
 
         for i in range(self.lifes):
-            self.game.graphics.draw('life16x16', add_vecs((100, 24),
-            offset), gridcoords=False, offset=(i*18, 0))
+            self.game.graphics.draw('life16x16', add_vecs((100, 24), offset),
+                                    gridcoords=False, offset=(i*18, 0))
 
     def snake_killed(self, killed_by):
         """Snake killed event handler."""
@@ -182,6 +185,7 @@ class PlayerBase(object):
             self.lifes -= 1
             self.boost = MAX_BOOST
             self.snake.respawn(self.game.get_spawnpoint())
+
 
 class Bot(PlayerBase):
 
@@ -193,8 +197,8 @@ class Bot(PlayerBase):
         PlayerBase.__init__(self, game, config)
 
         self.pathfinder = Pathfinder(self.game.tilemap,
-        MANHATTEN_DISTANCE,
-        self.pathfinder_search_done)
+                                     MANHATTEN_DISTANCE,
+                                     self.pathfinder_search_done)
 
         self.searching = False
         self.path = []
@@ -216,11 +220,12 @@ class Bot(PlayerBase):
             prev_target = self.target
             while prev_target == self.target:
                 self.target = \
-                self.game.randomizer.choice(
-                self.game.pwrup_manager.get_powerups()).pos
+                    self.game.randomizer.choice(
+                        self.game.pwrup_manager.get_powerups()).pos
             self.searching = True
-            self.pathfinder.find_path(self.path[len(self.path)-1] if \
-            self.path else self.snake[0], self.target)
+            self.pathfinder.find_path(self.path[len(self.path)-1] if
+                                      self.path else self.snake[0],
+                                      self.target)
 
         # Test if an enemy snake is in sight and open fire
         # This is not really completed since the bot never stops firing.
@@ -230,7 +235,7 @@ class Bot(PlayerBase):
                 ray = add_vecs(ray, self.snake.heading)
 
                 if ray in self.game.tilemap.tiles or not \
-                self.game.in_bounds(ray):
+                        self.game.in_bounds(ray):
                     break
 
                 for player in self.game.players:
@@ -245,7 +250,7 @@ class Bot(PlayerBase):
             self.next_tile = self.path.pop(0)
 
             angle = degrees(atan2(*sub_vecs(self.next_tile,
-            self.snake[0])))
+                                            self.snake[0])))
 
             if angle == 90.0:
                 self.snake.set_heading(RIGHT)
@@ -260,13 +265,14 @@ class Bot(PlayerBase):
             # toroidal nature of the map. Otherwise the snake would move
             # across the whole entire fucking map.
             if self.game.tilemap.on_edge(self.snake[0]) and \
-            self.game.tilemap.on_edge(self.next_tile) and \
-            distance(self.snake[0], self.next_tile) > 1:
+                self.game.tilemap.on_edge(self.next_tile) and \
+                    distance(self.snake[0], self.next_tile) > 1:
                 self.snake.set_heading((-self.snake.heading[0],
-                -self.snake.heading[1]))
+                                        -self.snake.heading[1]))
 
         PlayerBase.update(self, delta_time)
-    
+
+
 class Player(PlayerBase):
 
     """
@@ -305,16 +311,16 @@ class Player(PlayerBase):
         PlayerBase.update(self, delta_time)
 
         if self.game.key_manager.key_pressed(self.ctrls['left']) \
-        and self.snake.heading != RIGHT:
+                and self.snake.heading != RIGHT:
             self.snake.set_heading(LEFT)
         elif self.game.key_manager.key_pressed(self.ctrls['up']) \
-        and self.snake.heading != DOWN:
+                and self.snake.heading != DOWN:
             self.snake.set_heading(UP)
         elif self.game.key_manager.key_pressed(self.ctrls['down']) \
-        and self.snake.heading != UP:
+                and self.snake.heading != UP:
             self.snake.set_heading(DOWN)
         elif self.game.key_manager.key_pressed(self.ctrls['right']) \
-        and self.snake.heading != LEFT:
+                and self.snake.heading != LEFT:
             self.snake.set_heading(RIGHT)
 
         if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):

@@ -13,6 +13,7 @@ from utils import add_vecs
 MANHATTEN_DISTANCE = 0
 EUCLIDIAN_DISTANCE = 1
 
+
 class Pathfinder(object):
     """
     Pathfinder using the A* algorithm.
@@ -108,7 +109,7 @@ class Pathfinder(object):
             tentative_g = self.g_cost[curr_node] + 10
 
             if neigh in self.open_lst and \
-            tentative_g >= self.g_cost[curr_node]:
+                    tentative_g >= self.g_cost[curr_node]:
                 continue
 
             self.parent[neigh] = curr_node
@@ -116,10 +117,10 @@ class Pathfinder(object):
 
             if self.heuristic == MANHATTEN_DISTANCE:
                 f_score = tentative_g + abs(dest[0] - neigh[0]) + \
-                abs(dest[1] - neigh[1])
+                    abs(dest[1] - neigh[1])
             elif self.heuristic == EUCLIDIAN_DISTANCE:
-                f_score = tentative_g + sqrt(pow(dest[0] - neigh[0], 2) + \
-                pow(dest[1] - neigh[1], 2))
+                f_score = tentative_g + sqrt(pow(dest[0] - neigh[0], 2) +
+                                             pow(dest[1] - neigh[1], 2))
 
             self.f_cost[neigh] = f_score
 

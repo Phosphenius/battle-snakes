@@ -4,7 +4,7 @@ Snake module.
 """
 
 from settings import (INVINCIBILITY_BLINK_RATE, MAX_HITPOINTS,
-INIT_SPEED, MIN_SPEED, MAX_SPEED)
+                      INIT_SPEED, MIN_SPEED, MAX_SPEED)
 from utils import add_vecs
 
 # -- Directions --
@@ -12,7 +12,8 @@ RIGHT = (+1, 0)
 LEFT = (-1, 0)
 UP = (0, -1)
 DOWN = (0, +1)
-DIRECTIONS = {'right':RIGHT, 'left':LEFT, 'up':UP, 'down':DOWN}
+DIRECTIONS = {'right': RIGHT, 'left': LEFT, 'up': UP, 'down': DOWN}
+
 
 class SnakeNormalState(object):
 
@@ -30,6 +31,7 @@ class SnakeNormalState(object):
     def update(self, delta_time):
         """Update state."""
         self.snake.move()
+
 
 class SnakeInvincibleState(object):
 
@@ -66,6 +68,7 @@ class SnakeInvincibleState(object):
         """Leave state."""
         self.snake.isinvincible = False
         self.snake.isvisible = True
+
 
 class Snake(object):
 
@@ -156,11 +159,11 @@ class Snake(object):
         self.curr_state = new_state
 
     def take_damage(self, dmg, dealt_by, setback=False,
-    invincible=False, invinc_lifetime=0, shrink=0, slowdown=0):
+                    invincible=False, invinc_lifetime=0, shrink=0, slowdown=0):
         """Take damage."""
         if not self.isinvincible:
             self.hitpoints -= dmg
-            for i in range(shrink):
+            for _ in range(shrink):
                 if len(self.body) == 2:
                     break
                 if setback:
@@ -230,7 +233,7 @@ class Snake(object):
             elif self.grow > 0:
                 self.grow -= 1
             elif self.grow < 0:
-                for i in range(-self.grow+1):
+                for _ in range(-self.grow+1):
                     if len(self.body) == 2:
                         break
                     self.body.pop()

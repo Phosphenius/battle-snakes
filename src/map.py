@@ -9,6 +9,7 @@ import os
 from utils import str_to_vec, str_to_vec_lst
 from snake import DIRECTIONS
 
+
 class Map(object):
 
     """
@@ -19,7 +20,7 @@ class Map(object):
         self.game = game
         self.tiles = []
         self.spawnpoints = []
-        self.portals = {} # {p1:(p2, dir), p2:(p1, dir)}
+        self.portals = {}  # {p1:(p2, dir), p2:(p1, dir)}
 
         doc = dom.parse(path)
         maptag = doc.firstChild
@@ -43,23 +44,23 @@ class Map(object):
                         for p_node in portal_node.childNodes:
                             if p_node.nodeName == 'p1':
                                 point1 = \
-                                str_to_vec(p_node.firstChild.data)
+                                    str_to_vec(p_node.firstChild.data)
                                 p1_dir = \
-                                DIRECTIONS[p_node.getAttribute('dir')]
+                                    DIRECTIONS[p_node.getAttribute('dir')]
                             elif p_node.nodeName == 'p2':
                                 point2 = \
-                                str_to_vec(p_node.firstChild.data)
+                                    str_to_vec(p_node.firstChild.data)
                                 p2_dir = \
-                                DIRECTIONS[p_node.getAttribute('dir')]
+                                    DIRECTIONS[p_node.getAttribute('dir')]
                             if point1 is not None and point2 is not None:
                                 self.portals.update(
-                                {point1:(point2, p2_dir),
-                                point2:(point1, p1_dir)})
+                                    {point1: (point2, p2_dir),
+                                        point2: (point1, p1_dir)})
 
     def on_edge(self, pos):
         """Determines if pos is on the edge of the map."""
         return pos[0] == 0 or pos[0] == self.width-1 or \
-               pos[1] == 0 or pos[1] == self.height-1
+            pos[1] == 0 or pos[1] == self.height-1
 
     def draw(self):
         """Draw map."""

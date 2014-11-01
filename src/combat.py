@@ -6,17 +6,18 @@ Combat module.
 from utils import add_vecs, mul_vec
 
 # Shots
-MG_SHOT1 = {'tex':'mg_shot1', 'speed':42, 'damage':10}
-SHOT1 = {'tex':'shot1', 'speed':70, 'damage':100}
-PLASMA_SHOT = {'tex':'shot2', 'speed':30, 'damage':25, 'slowdown':2.5}
+MG_SHOT1 = {'tex': 'mg_shot1', 'speed': 42, 'damage': 10}
+SHOT1 = {'tex': 'shot1', 'speed': 70, 'damage': 100}
+PLASMA_SHOT = {'tex': 'shot2', 'speed': 30, 'damage': 25, 'slowdown': 2.5}
 
 # Weapons
-STD_MG = {'shot':MG_SHOT1, 'type':'MG', 'ammo':999999, 'freq':8}
-H_GUN = {'shot':SHOT1, 'type':'Cannon', 'ammo':20, 'freq':1.3}
-PLASMA_GUN = {'shot':PLASMA_SHOT, 'type':'Plasma', 'ammo':50, 'freq':2.5}
+STD_MG = {'shot': MG_SHOT1, 'type': 'MG', 'ammo': 999999, 'freq': 8}
+H_GUN = {'shot': SHOT1, 'type': 'Cannon', 'ammo': 20, 'freq': 1.3}
+PLASMA_GUN = {'shot': PLASMA_SHOT, 'type': 'Plasma', 'ammo': 50, 'freq': 2.5}
 
 DEFAULT_SHOT_BLINK_RATE = 100000
 DEFAULT_SHOT_LIFETIME = 3.5
+
 
 class Shot(object):
     """Represents a shot."""
@@ -83,6 +84,7 @@ class Shot(object):
         if self.isvisible:
             self.game.graphics.draw(self.tex, self.pos)
 
+
 class ShotManager(object):
 
     """
@@ -112,6 +114,7 @@ class ShotManager(object):
         for shot in self.shot_pool:
             if shot.isalive:
                 shot.draw()
+
 
 class Weapon(object):
 
@@ -146,12 +149,11 @@ class Weapon(object):
                     heading = self.owner.snake.heading
 
                     if add_vecs(head, mul_vec(heading, 1)) not in \
-                    self.game.tilemap.tiles and \
-                    head not in self.game.tilemap.tiles:
+                        self.game.tilemap.tiles and \
+                            head not in self.game.tilemap.tiles:
                         self.ammo -= 1
                         self.game.shot_manager.create_shot(
-                        add_vecs(head, mul_vec(heading, 2)),
-                        heading, self.owner.snake.head_tag, self.shot)
+                            add_vecs(head, mul_vec(heading, 2)),
+                            heading, self.owner.snake.head_tag, self.shot)
             else:
                 self.firing = False
-

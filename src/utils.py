@@ -3,25 +3,31 @@
 
 from math import hypot
 
+
 def add_vecs(vec1, vec2):
     """Add vectors."""
     return (vec1[0] + vec2[0], vec1[1] + vec2[1])
+
 
 def sub_vecs(vec1, vec2):
     """Sub vectors."""
     return (vec1[0] - vec2[0], vec1[1] - vec2[1])
 
+
 def mul_vec(vec, scalar):
     """Multiply vector with scalar."""
     return (vec[0] * scalar, vec[1] * scalar)
+
 
 def distance(vec1, vec2):
     """Compute distance between vec1 and vec2."""
     return hypot(vec1[0] - vec2[0], vec1[1] - vec2[1])
 
+
 def str_to_vec(data):
     """Convert string rep. of a vector to tuple."""
     return tuple(int(i) for i in data.strip().split(':'))
+
 
 def str_to_vec_lst(data):
     """Convert string rep. of vector list to tuple list."""
@@ -29,6 +35,7 @@ def str_to_vec_lst(data):
     for entry in data.strip().split(';'):
         veclst.append(str_to_vec(entry))
     return veclst
+
 
 def vec_lst_to_str(lst):
     """Convert list of tuples to string rep."""

@@ -8,6 +8,7 @@ import xml.dom.minidom as dom
 
 from utils import Timer
 
+
 class Powerup(object):
 
     """
@@ -69,6 +70,7 @@ class Powerup(object):
         if self.isvisible:
             self.game.graphics.draw(self.tex, self.pos)
 
+
 class PowerupManager(object):
 
     """
@@ -86,25 +88,25 @@ class PowerupManager(object):
         for p_node in doc.firstChild.childNodes:
             if p_node.nodeName == 'Powerup':
                 name = p_node.getAttribute('name')
-                self.pwrup_prototypes[name] = {'actions':[]}
+                self.pwrup_prototypes[name] = {'actions': []}
                 self.pwrup_prototypes[name]['tex'] = \
-                p_node.getAttribute('tex')
+                    p_node.getAttribute('tex')
                 self.pwrup_prototypes[name]['autorespawn'] = \
-                bool(p_node.getAttribute('autorespawn'))
+                    bool(p_node.getAttribute('autorespawn'))
 
                 attrs = ('lifetime', 'blinkrate', 'startblinkingat')
                 for attr in attrs:
                     if p_node.hasAttribute(attr):
                         self.pwrup_prototypes[name][attr] = \
-                        float(p_node.getAttribute(attr))
+                            float(p_node.getAttribute(attr))
 
                 for node in p_node.childNodes:
                     if node.nodeName == 'action':
                         t_attr = node.getAttribute('target')
                         val_attr = node.getAttribute('value')
                         self.pwrup_prototypes[name]['actions'].append(
-                        {'target':t_attr, 'value':float(val_attr) \
-                        if '.' in val_attr else int(val_attr)})
+                            {'target': t_attr, 'value': float(val_attr)
+                             if '.' in val_attr else int(val_attr)})
 
     def get_powerups(self):
         """Return all powerups stored in a tuple."""
@@ -113,19 +115,19 @@ class PowerupManager(object):
     def autospawn(self, config, freq, delay=0):
         """Register a powerup so it will be spawned automatically."""
         timer = Timer(1. / (freq / 60.),
-        partial(self.spawn_pwrup, config), delay, True)
+                      partial(self.spawn_pwrup, config), delay, True)
         self.pwrup_spawners.append(timer)
 
     def spawn_pwrup(self, name, times=1):
         """Spawn powerup."""
-        for i in range(times):
+        for _ in range(times):
             for pwrup in self.pwrup_pool:
                 if not pwrup.isalive:
                     pwrup.reinit(self.game.randpos(),
-                    self.pwrup_prototypes[name])
+                                 self.pwrup_prototypes[name])
                     return
             self.pwrup_pool.append(Powerup(self.game, self.game.randpos(),
-            self.pwrup_prototypes[name]))
+                                           self.pwrup_prototypes[name]))
 
     def update(self, delta_time):
         """Update powerups."""
