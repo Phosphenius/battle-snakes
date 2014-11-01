@@ -23,19 +23,27 @@ from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
 
 VERSION = 'v0.2.1'
 
+
 def quit_game():
     """Quit the game."""
     pygame.quit()
     sys.exit()
+
 
 class GraphicsManager(object):
     '''Simple graphics manager'''
     def __init__(self, surf):
         self.surf = surf
         self.textures = {}
-        for i in glob.glob('../gfx/*.png'):
-            self.textures[os.path.splitext(os.path.split(i)[1])[0]] = \
-            pygame.image.load(i)
+        for img in glob.glob('../gfx/*.png'):
+            surf = pygame.image.load(img)
+
+            if surf.get_alpha() is None:
+                surf = surf.convert()
+            else:
+                surf = surf.convert_alpha()
+
+            self.textures[os.path.splitext(os.path.split(img)[1])[0]] = surf
 
     def draw(self, tex_name, pos, gridcoords=True, offset=(0, PANEL_H)):
         """Draw a texture."""
@@ -43,9 +51,10 @@ class GraphicsManager(object):
             raise Exception('No such texture: {0}'.format(tex_name))
         if gridcoords:
             self.surf.blit(self.textures[tex_name],
-            add_vecs(mul_vec(pos, CELL_SIZE), offset))
+                           add_vecs(mul_vec(pos, CELL_SIZE), offset))
         else:
             self.surf.blit(self.textures[tex_name], add_vecs(pos, offset))
+
 
 class KeyManager(object):
 
@@ -303,6 +312,7 @@ class BattleSnakesGame(object):
             self.update(delta_time)
             self.draw()
             pygame.display.update()
+
 
 def main():
     """Create game object."""
