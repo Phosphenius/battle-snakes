@@ -109,8 +109,14 @@ class PowerupManager(object):
                              if '.' in val_attr else int(val_attr)})
 
     def get_powerups(self):
-        """Return all powerups stored in a tuple."""
-        return tuple(self.pwrup_pool)
+        """Return active powerups as tuple."""
+        alive_pwrups = []
+
+        for pwrup in self.pwrup_pool:
+            if pwrup.isalive:
+                alive_pwrups.append(pwrup)
+
+        return tuple(alive_pwrups)
 
     def autospawn(self, config, freq, delay=0):
         """Register a powerup so it will be spawned automatically."""
