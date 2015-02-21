@@ -1,28 +1,28 @@
 Battle Snakes v0.1.0
 ====================
 
-Battle Snakes is a - at the moment - multiplayer-only action game inspired by the classic Snake game.
-
-It is still alpha and many features have yet to be implemented (Most importantly Bots)
+Snake inspired game still in early development.
 
 ![screenshot](https://raw.github.com/Teazer/battle-snakes/master/screenshot.png)
 
-#####Controls
-
-Player 1 
+####Controls
 
 * Movement = Arrow Keys
-* Shoot = l 
-* Speed Boost = k 
-* Next Weapon = j
+* Fire weapon = l 
+* Activate Speed Boost = k 
+* Switch to next weapon = j
 
-Player 2 
+####How to run 
 
-* Movement = WASD
-* Shoot = c
-* Speed Boost = v
-* Next Weapon = b
+Make sure you have the lastes version (1.9.1) of pygame installed.
+Then execute `Game.py` 
+
+Simple as that.
 
 
-#####Dependencies
-Pygame v1.9.1 (Python 2)
+
+
+
+
+
+
