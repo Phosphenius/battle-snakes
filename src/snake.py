@@ -5,7 +5,7 @@ Snake module.
 
 from settings import (INVINCIBILITY_BLINK_RATE, MAX_HITPOINTS,
                       INIT_SPEED, MIN_SPEED, MAX_SPEED)
-from utils import add_vecs
+from utils import add_vecs, normalize
 
 # -- Directions --
 RIGHT = (+1, 0)
@@ -150,7 +150,8 @@ class Snake(object):
     def set_heading(self, new_heading):
         """Set heading."""
         self.prev_heading = self.heading
-        self.heading = new_heading
+        self.heading = (normalize(new_heading) if new_heading != (0, 0)
+                        else new_heading)
 
     def change_state(self, new_state):
         """Transit to another state."""

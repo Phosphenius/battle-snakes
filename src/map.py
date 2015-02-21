@@ -8,6 +8,7 @@ import os
 
 from utils import str_to_vec, str_to_vec_lst
 from snake import DIRECTIONS
+from potentialfield import PotentialField
 
 
 class Map(object):
@@ -56,6 +57,17 @@ class Map(object):
                                 self.portals.update(
                                     {point1: (point2, p2_dir),
                                         point2: (point1, p1_dir)})
+
+        field = [None] * self.width
+        for xpos in xrange(self.width):
+            field[xpos] = [0] * self.height
+
+        for xpos in xrange(self.width):
+            for ypos in xrange(self.height):
+                if (xpos, ypos) in self.tiles:
+                    field[xpos][ypos] = 100.
+
+        self.pot_field = PotentialField(field, self.width, self.height)
 
     def on_edge(self, pos):
         """Determines if pos is on the edge of the map."""

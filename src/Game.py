@@ -15,7 +15,8 @@ from pygame.locals import QUIT, K_q, K_ESCAPE, K_F5, K_F6, K_F7
 from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
 from powerup import PowerupManager
-from player import Player, Bot, PLAYER1, BOT
+from player import Player, PLAYER1, BOT
+from bot import Bot
 from combat import ShotManager
 from map import Map
 from settings import (PANEL_H, CELL_SIZE, SCR_W, SCR_H, SPAWNPOINT_TAG,
@@ -119,7 +120,7 @@ class BattleSnakesGame(object):
         pygame.init()
         pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 
-        self.randomizer = random.Random()
+        self.randomizer = random.Random(6)
         self.sysfont = pygame.font.SysFont('Arial', 14)
         self.screen = pygame.display.set_mode(res)
         self.fps_clock = pygame.time.Clock()
@@ -154,7 +155,7 @@ class BattleSnakesGame(object):
         self.pwrup_manager.autospawn('life', 0.75, 120)
 
     def toroidal(self, obj):
-        '''Treats 'obj' as if the playfield was toroidal'''
+        """Treats 'obj' as if the play field was toroidal."""
         xpos, ypos = obj
         if xpos < 0:
             obj = (self.tilemap.width-1, ypos)
@@ -276,11 +277,6 @@ class BattleSnakesGame(object):
 
     def draw(self):
         """Render."""
-
-        # Show the first bots path for debugging purposes.
-#         for tile in self.players[1].path:
-#             self.graphics.draw('spawnpoint', tile)
-
         self.tilemap.draw()
 
         self.pwrup_manager.draw()
@@ -309,7 +305,7 @@ class BattleSnakesGame(object):
                 if event.type == QUIT:
                     quit_game()
             self.screen.fill(BLACK)
-            delta_time = (self.fps_clock.tick() / 1000.0) * self.game_speed
+            delta_time = (self.fps_clock.tick(60) / 1000.0) * self.game_speed
             self.update(delta_time)
             self.draw()
             pygame.display.update()

@@ -7,6 +7,7 @@ from functools import partial
 import xml.dom.minidom as dom
 
 from utils import Timer
+from potentialfield import PotentialField
 
 
 class Powerup(object):
@@ -17,6 +18,7 @@ class Powerup(object):
 
     def __init__(self, game, pos, prototype):
         self.game = game
+        self.pot_field = None
         self.pos = pos
         self.elapsed_lifetime = 0
         self.elapsed_blink = 0
@@ -32,6 +34,8 @@ class Powerup(object):
 
     def reinit(self, pos, prototype):
         """Reinit powerup."""
+        self.pot_field = PotentialField.create(self.game.tilemap.width,
+                                               self.game.tilemap.height, pos)
         self.respawn(pos)
         self.tex = prototype['tex']
         self.actions = prototype['actions']
@@ -47,6 +51,8 @@ class Powerup(object):
     def respawn(self, pos):
         """Respawn powerup."""
         self.pos = pos
+        self.pot_field = PotentialField.create(self.game.tilemap.width,
+                                               self.game.tilemap.height, pos)
         self.elapsed_lifetime = 0
         self.elapsed_blink = 0
         self.isalive = True

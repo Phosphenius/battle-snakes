@@ -4,16 +4,14 @@ Player module.
 """
 
 from collections import deque
-from math import atan2, degrees
 
 import pygame
 from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
                            K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 
-from pathfinder import Pathfinder, MANHATTEN_DISTANCE
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
-from utils import add_vecs, sub_vecs, distance
+from utils import add_vecs
 from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN
 from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
                       BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
@@ -185,92 +183,6 @@ class PlayerBase(object):
             self.lifes -= 1
             self.boost = MAX_BOOST
             self.snake.respawn(self.game.get_spawnpoint())
-
-
-class Bot(PlayerBase):
-
-    """
-    Basic bot class.
-    """
-
-    def __init__(self, game, config):
-        PlayerBase.__init__(self, game, config)
-
-        self.pathfinder = Pathfinder(self.game.tilemap,
-                                     MANHATTEN_DISTANCE,
-                                     self.pathfinder_search_done)
-
-        self.searching = False
-        self.path = []
-        self.next_tile = self.snake[0]
-        self.target = None
-
-    def pathfinder_search_done(self, success, path):
-        """Event handler for pathfinder search done event."""
-        self.searching = False
-        if success:
-            self.path.extend(path)
-
-    def update(self, delta_time):
-        """This is where all the stuff gets updated."""
-
-        # Select new target and compute new path to it if remaining path
-        # becomes too short.
-        if len(self.path) <= 24 and not self.searching:
-            prev_target = self.target
-            while prev_target == self.target:
-                self.target = \
-                    self.game.randomizer.choice(
-                        self.game.pwrup_manager.get_powerups()).pos
-            self.searching = True
-            self.pathfinder.find_path(self.path[len(self.path)-1] if
-                                      self.path else self.snake[0],
-                                      self.target)
-
-        # Test if an enemy snake is in sight and open fire
-        # This is not really completed since the bot never stops firing.
-        if self.snake.heading is not None:
-            ray = add_vecs(self.snake[0], self.snake.heading)
-            while True:
-                ray = add_vecs(ray, self.snake.heading)
-
-                if ray in self.game.tilemap.tiles or not \
-                        self.game.in_bounds(ray):
-                    break
-
-                for player in self.game.players:
-                    if player.pid == self.pid:
-                        continue
-                    if ray in player.snake:
-                        self.weapons[0].set_firing(True)
-                        break
-
-        # Compute new heading
-        if self.path and self.next_tile == self.snake[0]:
-            self.next_tile = self.path.pop(0)
-
-            angle = degrees(atan2(*sub_vecs(self.next_tile,
-                                            self.snake[0])))
-
-            if angle == 90.0:
-                self.snake.set_heading(RIGHT)
-            elif angle == -90.0:
-                self.snake.set_heading(LEFT)
-            elif angle == 180.0:
-                self.snake.set_heading(UP)
-            elif angle == 0.0:
-                self.snake.set_heading(DOWN)
-
-            # Invert heading in case the path takes advantage of the
-            # toroidal nature of the map. Otherwise the snake would move
-            # across the whole entire fucking map.
-            if self.game.tilemap.on_edge(self.snake[0]) and \
-                self.game.tilemap.on_edge(self.next_tile) and \
-                    distance(self.snake[0], self.next_tile) > 1:
-                self.snake.set_heading((-self.snake.heading[0],
-                                        -self.snake.heading[1]))
-
-        PlayerBase.update(self, delta_time)
 
 
 class Player(PlayerBase):

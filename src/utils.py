@@ -4,6 +4,18 @@
 from math import hypot
 
 
+def get_adjacent(pos, cols, rows):
+    """Get adjacent tiles in a grid."""
+    if pos[0] > 0:
+        yield (pos[0]-1, pos[1])
+    if pos[1] < rows-1:
+        yield (pos[0], pos[1]+1)
+    if pos[0] < cols-1:
+        yield (pos[0]+1, pos[1])
+    if pos[1] > 0:
+        yield (pos[0], pos[1]-1)
+
+
 def add_vecs(vec1, vec2):
     """Add vectors."""
     return (vec1[0] + vec2[0], vec1[1] + vec2[1])
@@ -19,9 +31,20 @@ def mul_vec(vec, scalar):
     return (vec[0] * scalar, vec[1] * scalar)
 
 
+def m_distance(vec1, vec2):
+    """Manhatten Distance between vec1 and vec2."""
+    return abs(vec1[0] - vec2[0]) + abs(vec1[1] - vec2[1])
+
+
 def distance(vec1, vec2):
-    """Compute distance between vec1 and vec2."""
+    """Euclidian Distance between vec1 and vec2."""
     return hypot(vec1[0] - vec2[0], vec1[1] - vec2[1])
+
+
+def normalize(vec):
+    """Normalize vector. Note that this functions returns an int vector."""
+    length = hypot(vec[0], vec[1])
+    return (int(vec[0] // length), int(vec[1] // length))
 
 
 def str_to_vec(data):
@@ -51,7 +74,7 @@ class Timer(object):
     """
     Simple infinite timer.
 
-    Note: Timer cannont be stopped.
+    Note: Timer cannot be stopped.
     """
 
     def __init__(self, intervall, tick, delay=0, running=False):
