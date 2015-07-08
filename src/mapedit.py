@@ -38,21 +38,30 @@ def make_line_of_tiles(point1, point2):
     return tile_lst
 
 
-class SetTilesCommand(object):
-    def __init__(self, tiles, tilemap):
+class ChangeTilesCommand(object):
+    def __init__(self, tiles, tilemap, remove=False):
         self.tile_lst = tiles
         self.tilemap = tilemap
-        self.tiles_set = []
+        self.tiles_changed = []
+        self.remove = remove
 
     def do(self):
         for tile in self.tile_lst:
-            if tile not in self.tilemap:
-                self.tilemap.append(tile)
-                self.tiles_set.append(tile)
+            if self.remove:
+                if tile in self.tilemap:
+                    self.tilemap.remove(tile)
+                    self.tiles_changed.append(tile)
+            else:
+                if tile not in self.tilemap:
+                    self.tilemap.append(tile)
+                    self.tiles_changed.append(tile)
 
     def undo(self):
-        for tile in self.tiles_set:
-            self.tilemap.remove(tile)
+        for tile in self.tiles_changed:
+            if self.remove:
+                self.tilemap.append(tile)
+            else:
+                self.tilemap.remove(tile)
 
 
 class MapEditor(object):
@@ -80,6 +89,11 @@ class MapEditor(object):
         self.file_menu.add_command(label='save as')
         self.file_menu.add_command(label='exit',
             command=self.exit_cmd)
+
+        self.edit_menu = tk.Menu(self.menu_bar)
+        self.menu_bar.add_cascade(label='Edit', menu=self.edit_menu)
+        self.edit_menu.add_command(label='Undo', command=self.undo)
+        self.edit_menu.add_command(label='Redo', command=self.redo)
 
         self.embed = tk.Frame(self.root, width=1400, height=700)
         self.embed.grid(row=0, column=0)
@@ -163,11 +177,8 @@ class MapEditor(object):
                     tile_lst = make_line_of_tiles(self.point1,
                     self.selected)
 
-                    for _ in range(2):
-                        self.undo()
-                        self.redo_stack.pop()
-
-                    self.exec_cmd(SetTilesCommand(tile_lst, self.tiles))
+                    self.exec_cmd(ChangeTilesCommand(tile_lst,
+                        self.tiles))
 
                     self.point1 = self.selected
             else:
@@ -177,16 +188,18 @@ class MapEditor(object):
         self.show_grid = not self.show_grid
 
     def update(self):
+        self.selected = ((self.mouse_x / CELL_SIZE) * CELL_SIZE,
+            (self.mouse_y / CELL_SIZE) * CELL_SIZE)
+
         if (self.mouse_state[LEFT_MOUSE_BUTTON] and
-        self.selected not in self.tiles):
-            self.exec_cmd(SetTilesCommand([self.selected], self.tiles))
+        self.selected not in self.tiles) and not self.shift_pressed:
+            self.exec_cmd(ChangeTilesCommand([self.selected],
+                self.tiles))
 
         if (self.mouse_state[RIGHT_MOUSE_BUTTON] and
         self.selected in self.tiles):
-            self.tiles.remove(self.selected)
-
-        self.selected = ((self.mouse_x / CELL_SIZE) * CELL_SIZE,
-            (self.mouse_y / CELL_SIZE) * CELL_SIZE)
+            self.exec_cmd(ChangeTilesCommand([self.selected],
+                self.tiles, remove=True))
 
         if self.point1 is not None:
             if self.point1[0] == self.selected[0]:
