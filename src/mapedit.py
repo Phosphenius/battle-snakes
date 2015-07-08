@@ -27,6 +27,7 @@ class MapEditor(object):
         self.root.bind('<Motion>', self.motion)
         self.root.bind('<ButtonPress>', self.on_button_press)
         self.root.bind('<ButtonRelease>', self.on_button_release)
+        self.root.bind('<Control-g>', self.toggle_grid)
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -62,6 +63,8 @@ class MapEditor(object):
         self.wall_tex = pygame.image.load('../gfx/wall.png').convert()
         self.tiles = []
         
+        self.show_grid = True
+        
         self.mouse_state = {LEFT_MOUSE_BUTTON:0, RIGHT_MOUSE_BUTTON:0}
 
     def motion(self, event):
@@ -73,6 +76,9 @@ class MapEditor(object):
     
     def on_button_release(self, event):  
         self.mouse_state[event.num] = False
+            
+    def toggle_grid(self, event):
+        self.show_grid = not self.show_grid
             
     def update(self, delta_time):
         if (self.mouse_state[LEFT_MOUSE_BUTTON] and 
@@ -96,10 +102,8 @@ class MapEditor(object):
                 (DISPLAY_WIDTH, ypos))
 
     def draw(self, delta_time):
-        self.draw_grid()
-                
-        #~ self.screen.blit(self.wall_tex, self.selected)
-
+        if self.show_grid:
+            self.draw_grid()
             
         for tile in self.tiles:
             self.screen.blit(self.wall_tex, tile)
