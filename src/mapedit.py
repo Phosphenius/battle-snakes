@@ -3,6 +3,7 @@
 
 import Tkinter as tk
 import os
+from collections import deque
 
 import pygame
 
@@ -21,6 +22,23 @@ LEFT_MOUSE_BUTTON = 1
 RIGHT_MOUSE_BUTTON = 3
 
 
+class SetTilesCommand(object):
+    def __init__(self, tiles, tilemap):
+        self.tile_lst = tiles
+        self.tilemap = tilemap
+        self.tiles_set = []
+        
+    def do(self):
+        for tile in self.tile_lst:
+            if tile not in self.tilemap:
+                self.tilemap.append(tile)
+                self.tiles_set.append(tile)
+        
+    def undo(self):
+        for tile in self.tiles_set:
+            self.tilemap.remove(tile)
+
+
 class MapEditor(object):
     def __init__(self):
         self.root = tk.Tk()
@@ -30,6 +48,8 @@ class MapEditor(object):
         self.root.bind('<Control-g>', self.toggle_grid)
         self.root.bind('<KeyPress>', self.on_key_press)
         self.root.bind('<Shift-KeyRelease>', self.shift_release)
+        self.root.bind('<Control-z>', self.on_undo)
+        self.root.bind('<Control-y>', self.on_redo)
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -73,6 +93,33 @@ class MapEditor(object):
         self.tile_line = None
         
         self.mouse_state = {LEFT_MOUSE_BUTTON:0, RIGHT_MOUSE_BUTTON:0}
+        
+        self.undo_stack = deque()
+        self.redo_stack = deque()
+
+    def exec_cmd(self, cmd):
+        cmd.do()
+        
+        if hasattr(cmd, 'undo'):
+            self.undo_stack.append(cmd)
+        
+    def on_undo(self, event):
+        self.undo()
+        
+    def undo(self):
+        if len(self.undo_stack) > 0:
+            cmd = self.undo_stack.pop()
+            self.redo_stack.append(cmd)
+            cmd.undo()
+
+    def on_redo(self, event):
+        self.redo()
+
+    def redo(self):
+        if len(self.redo_stack) > 0:
+            cmd = self.redo_stack.pop()
+            self.undo_stack.append(cmd)
+            cmd.do()
 
     def on_key_press(self, event):
         if event.keysym == 'Shift_L':
@@ -97,12 +144,17 @@ class MapEditor(object):
             if self.point1 is not None:
                 if (self.point1[0] == self.selected[0] or 
                     self.point1[1] == self.selected[1]):
-                        for tile in self.make_line_of_tiles(self.point1, 
-                        self.selected):
-                            if tile not in self.tiles:
-                                self.tiles.append(tile)
+                        tile_lst = self.make_line_of_tiles(self.point1, 
+                        self.selected)
+
+                        for _ in range(2): 
+                            self.undo()
+                            self.redo_stack.pop()
+                        
+                        self.exec_cmd(SetTilesCommand(tile_lst, 
+                        self.tiles))
+                        
                         self.point1 = self.selected
-                            
             else:
                 self.point1 = self.selected
             
@@ -113,7 +165,7 @@ class MapEditor(object):
     def update(self, delta_time):
         if (self.mouse_state[LEFT_MOUSE_BUTTON] and 
         self.selected not in self.tiles):
-            self.tiles.append(self.selected)
+            self.exec_cmd(SetTilesCommand([self.selected], self.tiles))
             
         if (self.mouse_state[RIGHT_MOUSE_BUTTON] and
         self.selected in self.tiles):
