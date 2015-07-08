@@ -237,6 +237,9 @@ class MapEditor(object):
             for tile in self.tile_line:
                 self.screen.blit(self.wall_tex, tile)
 
+        if self.point1 is not None:
+            self.screen.blit(self.wall_tex, self.point1)
+
     def run(self):
         while not self.quit:
             for _ in pygame.event.get():
