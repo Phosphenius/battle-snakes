@@ -6,7 +6,7 @@ import os
 
 import pygame
 
-from colors import BLACK, ORANGE, DARK_GRAY
+from colors import BLACK, ORANGE, GREEN, DARK_GRAY
 
 
 FPS = 30
@@ -28,6 +28,8 @@ class MapEditor(object):
         self.root.bind('<ButtonPress>', self.on_button_press)
         self.root.bind('<ButtonRelease>', self.on_button_release)
         self.root.bind('<Control-g>', self.toggle_grid)
+        self.root.bind('<KeyPress>', self.on_key_press)
+        self.root.bind('<Shift-KeyRelease>', self.shift_release)
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -65,8 +67,22 @@ class MapEditor(object):
         
         self.show_grid = True
         
+        self.shift_pressed = False
+        self.point1 = None
+        
+        self.tile_line = None
+        
         self.mouse_state = {LEFT_MOUSE_BUTTON:0, RIGHT_MOUSE_BUTTON:0}
 
+    def on_key_press(self, event):
+        if event.keysym == 'Shift_L':
+            self.shift_pressed = True
+
+    def shift_release(self, event):
+        self.shift_pressed = False
+        self.point1 = None
+        self.point2 = None
+        
     def motion(self, event):
         self.mouse_x = event.x 
         self.mouse_y = event.y 
@@ -76,8 +92,22 @@ class MapEditor(object):
     
     def on_button_release(self, event):  
         self.mouse_state[event.num] = False
+        
+        if event.num == LEFT_MOUSE_BUTTON and self.shift_pressed:
+            if self.point1 is not None:
+                if (self.point1[0] == self.selected[0] or 
+                    self.point1[1] == self.selected[1]):
+                        for tile in self.make_line_of_tiles(self.point1, 
+                        self.selected):
+                            if tile not in self.tiles:
+                                self.tiles.append(tile)
+                        self.point1 = self.selected
+                            
+            else:
+                self.point1 = self.selected
             
     def toggle_grid(self, event):
+        print(event.state)
         self.show_grid = not self.show_grid
             
     def update(self, delta_time):
@@ -91,6 +121,18 @@ class MapEditor(object):
             
         self.selected = ((self.mouse_x / CELL_SIZE) * CELL_SIZE, 
             (self.mouse_y / CELL_SIZE) * CELL_SIZE)
+            
+        if self.point1 is not None:
+            if self.point1[0] == self.selected[0]:
+                self.tile_line = self.make_line_of_tiles(self.point1, 
+                self.selected)
+            elif self.point1[1] == self.selected[1]:
+                self.tile_line = self.make_line_of_tiles(self.point1, 
+                self.selected)
+            else:
+                self.tile_line = None
+        else:
+            self.tile_line = None
 
     def draw_grid(self):
         for xpos in range(0, DISPLAY_WIDTH, CELL_SIZE):
@@ -100,6 +142,22 @@ class MapEditor(object):
         for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
             pygame.draw.line(self.screen, DARK_GRAY, (0, ypos),
                 (DISPLAY_WIDTH, ypos))
+
+    def make_line_of_tiles(self, point1, point2):
+        vertical = point1[0] == point2[0]
+        tile_lst = []
+        if vertical:
+            startpoint = min(point1[1], point2[1])
+            endpoint = max(point1[1], point2[1])
+            for ypos in range(startpoint, endpoint+1, CELL_SIZE):
+                tile_lst.append((point1[0], ypos))
+        else:
+            startpoint = min(point1[0], point2[0])
+            endpoint = max(point1[0], point2[0])
+            for xpos in range(startpoint, endpoint+1, CELL_SIZE):
+                tile_lst.append((xpos, point1[1]))
+    
+        return tile_lst
 
     def draw(self, delta_time):
         if self.show_grid:
@@ -111,6 +169,10 @@ class MapEditor(object):
         pygame.draw.rect(self.screen, ORANGE, 
             pygame.Rect(self.selected, 
             (CELL_SIZE, CELL_SIZE)))
+            
+        if self.tile_line is not None:
+            for tile in self.tile_line:
+                self.screen.blit(self.wall_tex, tile)
 
     def run(self):
         while not self.quit:
