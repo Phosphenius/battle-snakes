@@ -78,6 +78,10 @@ class MapEditor(object):
         self.root.bind('<Shift-KeyRelease>', self.shift_release)
         self.root.bind('<Control-z>', self.on_undo)
         self.root.bind('<Control-y>', self.on_redo)
+        self.root.bind('<Control-Button-1>', self.fill_horizontal)
+        self.root.bind('<Control-Alt-Button-1>', self.fill_vertical)
+        self.root.bind('<Control-Button-3>', self.remove_horizontal)
+        self.root.bind('<Control-Alt-Button-3>', self.remove_vertical)
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -154,6 +158,32 @@ class MapEditor(object):
             cmd = self.redo_stack.pop()
             self.undo_stack.append(cmd)
             cmd.do()
+
+    def fill_horizontal(self, _):
+        tile_lst = make_line_of_tiles((0, self.selected[1]), 
+        (DISPLAY_WIDTH, self.selected[1]))
+        
+        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles))
+        
+    def fill_vertical(self, _):
+        tile_lst = make_line_of_tiles((self.selected[0], 0), 
+        (self.selected[0], DISPLAY_HEIGHT))
+        
+        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles))
+
+    def remove_horizontal(self, _):
+        tile_lst = make_line_of_tiles((0, self.selected[1]), 
+        (DISPLAY_WIDTH, self.selected[1]))
+        
+        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles, 
+        remove=True))
+        
+    def remove_vertical(self, _):
+        tile_lst = make_line_of_tiles((self.selected[0], 0), 
+        (self.selected[0], DISPLAY_HEIGHT))
+        
+        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles, 
+        remove=True))
 
     def on_key_press(self, event):
         if event.keysym == 'Shift_L':
