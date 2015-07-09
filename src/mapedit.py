@@ -7,7 +7,7 @@ from collections import deque
 
 import pygame
 
-from colors import BLACK, ORANGE, DARK_GRAY
+from colors import BLACK, ORANGE, GREEN, DARK_GRAY
 
 
 FPS = 30
@@ -59,9 +59,11 @@ class ChangeTilesCommand(object):
     def undo(self):
         for tile in self.tiles_changed:
             if self.remove:
-                self.tilemap.append(tile)
+                if tile not in self.tilemap:
+                    self.tilemap.append(tile)
             else:
-                self.tilemap.remove(tile)
+                if tile in self.tilemap:
+                    self.tilemap.remove(tile)
 
 
 class MapEditor(object):
@@ -71,6 +73,7 @@ class MapEditor(object):
         self.root.bind('<ButtonPress>', self.on_button_press)
         self.root.bind('<ButtonRelease>', self.on_button_release)
         self.root.bind('<Control-g>', self.toggle_grid)
+        self.root.bind('<Control-h>', self.toggle_helper_lines)
         self.root.bind('<KeyPress>', self.on_key_press)
         self.root.bind('<Shift-KeyRelease>', self.shift_release)
         self.root.bind('<Control-z>', self.on_undo)
@@ -116,6 +119,7 @@ class MapEditor(object):
         self.tiles = []
 
         self.show_grid = True
+        self.show_helper_lines = True
 
         self.shift_pressed = False
         self.point1 = None
@@ -187,6 +191,9 @@ class MapEditor(object):
     def toggle_grid(self, _):
         self.show_grid = not self.show_grid
 
+    def toggle_helper_lines(self, _):
+        self.show_helper_lines = not self.show_helper_lines
+
     def update(self):
         self.selected = ((self.mouse_x / CELL_SIZE) * CELL_SIZE,
             (self.mouse_y / CELL_SIZE) * CELL_SIZE)
@@ -239,6 +246,17 @@ class MapEditor(object):
 
         if self.point1 is not None:
             self.screen.blit(self.wall_tex, self.point1)
+
+        if self.show_helper_lines:
+            half_size = CELL_SIZE / 2
+
+            pygame.draw.line(self.screen, GREEN,
+            (self.selected[0] + half_size, 0),
+            (self.selected[0] + half_size, DISPLAY_HEIGHT))
+
+            pygame.draw.line(self.screen, GREEN,
+            (0, self.selected[1] + half_size),
+            (DISPLAY_WIDTH, self.selected[1] + half_size))
 
     def run(self):
         while not self.quit:
