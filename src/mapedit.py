@@ -21,6 +21,8 @@ DISPLAY_HEIGHT = ROWS * CELL_SIZE
 LEFT_MOUSE_BUTTON = 1
 RIGHT_MOUSE_BUTTON = 3
 
+MAX_UNDO_REDO = 1024
+
 
 def make_line_of_tiles(point1, point2):
     tile_lst = []
@@ -36,6 +38,30 @@ def make_line_of_tiles(point1, point2):
             tile_lst.append((xpos, point1[1]))
 
     return tile_lst
+
+
+class CommandManager(object):
+    def __init__(self):
+        self.undo_stack = deque(maxlen=MAX_UNDO_REDO)
+        self.redo_stack = deque(maxlen=MAX_UNDO_REDO)
+
+    def exec_cmd(self, cmd):
+        cmd.do()
+
+        if hasattr(cmd, 'undo'):
+            self.undo_stack.append(cmd)
+
+    def undo(self):
+        if len(self.undo_stack) > 0:
+            cmd = self.undo_stack.pop()
+            self.redo_stack.append(cmd)
+            cmd.undo()
+
+    def redo(self):
+        if len(self.redo_stack) > 0:
+            cmd = self.redo_stack.pop()
+            self.undo_stack.append(cmd)
+            cmd.do()
 
 
 class ChangeTilesCommand(object):
@@ -68,6 +94,8 @@ class ChangeTilesCommand(object):
 
 class MapEditor(object):
     def __init__(self):
+        self.cmd_manager = CommandManager()
+
         self.root = tk.Tk()
         self.root.bind('<Motion>', self.motion)
         self.root.bind('<ButtonPress>', self.on_button_press)
@@ -82,6 +110,7 @@ class MapEditor(object):
         self.root.bind('<Control-Alt-Button-1>', self.fill_vertical)
         self.root.bind('<Control-Button-3>', self.remove_horizontal)
         self.root.bind('<Control-Alt-Button-3>', self.remove_vertical)
+
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
 
@@ -99,8 +128,10 @@ class MapEditor(object):
 
         self.edit_menu = tk.Menu(self.menu_bar)
         self.menu_bar.add_cascade(label='Edit', menu=self.edit_menu)
-        self.edit_menu.add_command(label='Undo', command=self.undo)
-        self.edit_menu.add_command(label='Redo', command=self.redo)
+        self.edit_menu.add_command(label='Undo',
+            command=self.cmd_manager.undo)
+        self.edit_menu.add_command(label='Redo',
+            command=self.cmd_manager.redo)
 
         self.embed = tk.Frame(self.root, width=1400, height=700)
         self.embed.grid(row=0, column=0)
@@ -132,58 +163,40 @@ class MapEditor(object):
 
         self.mouse_state = {LEFT_MOUSE_BUTTON:0, RIGHT_MOUSE_BUTTON:0}
 
-        self.undo_stack = deque()
-        self.redo_stack = deque()
-
-    def exec_cmd(self, cmd):
-        cmd.do()
-
-        if hasattr(cmd, 'undo'):
-            self.undo_stack.append(cmd)
-
     def on_undo(self, _):
-        self.undo()
-
-    def undo(self):
-        if len(self.undo_stack) > 0:
-            cmd = self.undo_stack.pop()
-            self.redo_stack.append(cmd)
-            cmd.undo()
+        self.cmd_manager.undo()
 
     def on_redo(self, _):
-        self.redo()
-
-    def redo(self):
-        if len(self.redo_stack) > 0:
-            cmd = self.redo_stack.pop()
-            self.undo_stack.append(cmd)
-            cmd.do()
+        self.cmd_manager.redo()
 
     def fill_horizontal(self, _):
-        tile_lst = make_line_of_tiles((0, self.selected[1]), 
+        tile_lst = make_line_of_tiles((0, self.selected[1]),
         (DISPLAY_WIDTH, self.selected[1]))
-        
-        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles))
-        
+
+        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
+            self.tiles))
+
     def fill_vertical(self, _):
-        tile_lst = make_line_of_tiles((self.selected[0], 0), 
+        tile_lst = make_line_of_tiles((self.selected[0], 0),
         (self.selected[0], DISPLAY_HEIGHT))
-        
-        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles))
+
+        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
+            self.tiles))
 
     def remove_horizontal(self, _):
-        tile_lst = make_line_of_tiles((0, self.selected[1]), 
+        tile_lst = make_line_of_tiles((0, self.selected[1]),
         (DISPLAY_WIDTH, self.selected[1]))
-        
-        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles, 
+
+        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
+            self.tiles,
         remove=True))
-        
+
     def remove_vertical(self, _):
-        tile_lst = make_line_of_tiles((self.selected[0], 0), 
+        tile_lst = make_line_of_tiles((self.selected[0], 0),
         (self.selected[0], DISPLAY_HEIGHT))
-        
-        self.exec_cmd(ChangeTilesCommand(tile_lst, self.tiles, 
-        remove=True))
+
+        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
+            self.tiles, remove=True))
 
     def on_key_press(self, event):
         if event.keysym == 'Shift_L':
@@ -211,7 +224,7 @@ class MapEditor(object):
                     tile_lst = make_line_of_tiles(self.point1,
                     self.selected)
 
-                    self.exec_cmd(ChangeTilesCommand(tile_lst,
+                    self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
                         self.tiles))
 
                     self.point1 = self.selected
@@ -230,12 +243,12 @@ class MapEditor(object):
 
         if (self.mouse_state[LEFT_MOUSE_BUTTON] and
         self.selected not in self.tiles) and not self.shift_pressed:
-            self.exec_cmd(ChangeTilesCommand([self.selected],
+            self.cmd_manager.exec_cmd(ChangeTilesCommand([self.selected],
                 self.tiles))
 
         if (self.mouse_state[RIGHT_MOUSE_BUTTON] and
         self.selected in self.tiles):
-            self.exec_cmd(ChangeTilesCommand([self.selected],
+            self.cmd_manager.exec_cmd(ChangeTilesCommand([self.selected],
                 self.tiles, remove=True))
 
         if self.point1 is not None:
