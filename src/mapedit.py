@@ -230,17 +230,16 @@ class EditState(object):
             if self.context.input.key_tapped('H'):
                 self.show_help_lines = not self.show_help_lines
 
-            if self.context.input.button_tapped(LEFT_MOUSE_BUTTON):
-                self.fill_horizontal()
-            elif self.context.input.button_tapped(RIGHT_MOUSE_BUTTON):
-                self.remove_horizontal()
-
             if (self.context.input.button_tapped(LEFT_MOUSE_BUTTON) and
                     self.context.input.key_pressed('SHIFT_L')):
                 self.fill_vertical()
             elif (self.context.input.button_tapped(RIGHT_MOUSE_BUTTON)
                   and self.context.input.key_pressed('SHIFT_L')):
                 self.remove_vertical()
+            elif self.context.input.button_tapped(LEFT_MOUSE_BUTTON):
+                self.fill_horizontal()
+            elif self.context.input.button_tapped(RIGHT_MOUSE_BUTTON):
+                self.remove_horizontal()
 
         self.selected = (
             (self.context.input.mouse_x / CELL_SIZE) * CELL_SIZE,
