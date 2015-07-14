@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import Tkinter as tk
-import tkMessageBox as msgbox
+import tkFileDialog as filedia
 import os
 from collections import deque
 from copy import copy
@@ -27,12 +27,10 @@ RIGHT_MOUSE_BUTTON = 3
 
 MAX_UNDO_REDO = 1024
 
-INIT_STATE_NAME = 'init'
-EDIT_STATE_NAME = 'edit'
-
 # Map object types
 TILE_OBJ = 0
 SPAWNPOINT_OBJ = 1
+
 
 def make_line_of_tiles(point1, point2):
     tile_lst = []
@@ -73,15 +71,26 @@ class TileMap(object):
             return self.spawnpoints
 
     def save(self, path):
-        root = Element('map')
+        root = Element('Map', {'description': '', 'size': '128x64'})
 
-        portals_tag = SubElement(root, 'portals')
+        portals_tag = SubElement(root, 'Portals')
 
-        spawnpoints_tag = SubElement(root, 'spawnpoints')
-        spawnpoints_tag.text = vec_lst_to_str(self.spawnpoints)
+        spoints = []
 
-        tiles_tag = SubElement(root, 'tiles')
-        tiles_tag.text = vec_lst_to_str(self.tiles)
+        for spoint in self.spawnpoints:
+            spoints.append((spoint[0] / CELL_SIZE,
+                            spoint[1] / CELL_SIZE))
+
+        spawnpoints_tag = SubElement(root, 'Spawnpoints')
+        spawnpoints_tag.text = vec_lst_to_str(spoints)
+
+        tiles = []
+
+        for tile in self.tiles:
+            tiles.append((tile[0] / CELL_SIZE, tile[1] / CELL_SIZE))
+
+        tiles_tag = SubElement(root, 'Tiles')
+        tiles_tag.text = vec_lst_to_str(tiles)
 
         ElementTree(root).write(path)
 
@@ -301,8 +310,14 @@ class InputManager(object):
             self.curr_key_state.remove('ALT_L')
         elif event.keysym == 'Meta_R':
             self.curr_key_state.remove('ALT_R')
+        elif (event.keysym == 'Escape' and
+                'CONTROL_L' in self.curr_key_state):
+            self.curr_key_state.remove('CONTROL_L')
         else:
-            self.curr_key_state.remove(event.keysym.upper())
+            try:
+                self.curr_key_state.remove(event.keysym.upper())
+            except:
+                pass # Don't give a shit!
 
     def capture_button_press(self, event):
         if event.num not in self.curr_button_state:
@@ -338,9 +353,6 @@ class InitState(object):
     def __init__(self, state_context):
         self.context = state_context
 
-    def get_name(self):
-        return INIT_STATE_NAME
-
     def enter(self):
         pass
 
@@ -372,32 +384,35 @@ class EditState(object):
 
         self.tool = TileTool(self)
 
+        self.save_path = u''
+
     def file_save(self):
-        pass
+        if self.save_path is not u'':
+            self.tilemap.save(self.save_path)
+        else:
+            self.file_save_as()
 
     def file_save_as(self):
-        pass
+        result = filedia.asksaveasfilename(
+            defaultextension='.xml',
+            initialdir='/',
+            initialfile='untiteld',
+            title='Save map')
 
-    def file_close(self):
-        pass
-
-    def get_name(self):
-        return EDIT_STATE_NAME
+        if result is not u'':
+            self.save_path = result
+            self.tilemap.save(result)
 
     def enter(self):
         self.context.file_menu.entryconfig(3, state=tk.NORMAL,
             command=self.file_save)
         self.context.file_menu.entryconfig(4, state=tk.NORMAL,
             command=self.file_save_as)
-        self.context.file_menu.entryconfig(6, state=tk.NORMAL,
-            command=self.file_close)
 
     def leave(self):
         self.context.file_menu.entryconfig(3, state=tk.DISABLED,
             command=None)
         self.context.file_menu.entryconfig(4, state=tk.DISABLED,
-            command=None)
-        self.context.file_menu.entryconfig(6, state=tk.NORMAL,
             command=None)
 
     def update(self):
@@ -408,6 +423,10 @@ class EditState(object):
             elif self.context.input.key_tapped('Y'):
                 self.cmd_manager.redo()
 
+            # Save file
+            if self.context.input.key_tapped('S'):
+                self.file_save()
+
             # Toggle grid
             if self.context.input.key_tapped('G'):
                 self.show_grid = not self.show_grid
@@ -415,16 +434,18 @@ class EditState(object):
             # Toggle 'help lines'
             if self.context.input.key_tapped('H'):
                 self.show_help_lines = not self.show_help_lines
-
-        if self.context.input.key_tapped('T'):
-            self.tool = TileTool(self)
-        elif self.context.input.key_tapped('S'):
-            self.tool = SpawnpointTool(self)
+        else:
+            if self.context.input.key_tapped('T'):
+                self.tool = TileTool(self)
+            elif self.context.input.key_tapped('S'):
+                self.tool = SpawnpointTool(self)
 
         # Update selected cell
+        row = self.context.input.mouse_y / CELL_SIZE
+        col = self.context.input.mouse_x / CELL_SIZE
         self.selected = (
-            (self.context.input.mouse_x / CELL_SIZE) * CELL_SIZE,
-            (self.context.input.mouse_y / CELL_SIZE) * CELL_SIZE)
+            (col if col < COLS else COLS-1) * CELL_SIZE,
+            (row if row < ROWS else ROWS-1) * CELL_SIZE)
 
         self.tool.update()
 
@@ -503,12 +524,6 @@ class MapEditor(object):
             accelerator='Ctrl+S')
 
         self.file_menu.add_command(label='Save As', underline=5)
-        self.file_menu.add_separator()
-
-        self.file_menu.add_command(
-            label='Close',
-            underline=0,
-            accelerator='Ctrl+W')
 
         self.file_menu.add_separator()
 
@@ -520,7 +535,6 @@ class MapEditor(object):
 
         self.file_menu.entryconfig(3, state=tk.DISABLED)
         self.file_menu.entryconfig(4, state=tk.DISABLED)
-        self.file_menu.entryconfig(6, state=tk.DISABLED)
 
         self.embed = tk.Frame(self.root, width=1400, height=700)
         self.embed.grid(row=0, column=0)
@@ -546,10 +560,21 @@ class MapEditor(object):
     def file_new(self):
         self.change_state(EditState(self))
 
-    def file_open(self):
-        pass
+    #~ def file_open(self):
+        #~ result = filedia.askopenfilename(
+            #~ defaultextension='.xml',
+            #~ initialdir='/',
+            #~ title='Open map')
 
     def update(self):
+        if self.input.key_pressed('CONTROL_L'):
+            if self.input.key_pressed('Q'):
+                self.quit = True
+            elif self.input.key_tapped('N'):
+                self.file_new()
+            elif self.input.key_tapped('O'):
+                pass
+
         self.curr_state.update()
 
         # Must be called at the very end of update!
