@@ -6,10 +6,12 @@ import tkMessageBox as msgbox
 import os
 from collections import deque
 from copy import copy
+from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 import pygame
 
 from colors import BLACK, ORANGE, GREEN, DARK_GRAY
+from utils import vec_lst_to_str
 
 
 FPS = 30
@@ -28,6 +30,10 @@ MAX_UNDO_REDO = 1024
 INIT_STATE_NAME = 'init'
 EDIT_STATE_NAME = 'edit'
 
+# Map object types
+TILE_OBJ = 0
+SPAWNPOINT_OBJ = 1
+
 def make_line_of_tiles(point1, point2):
     tile_lst = []
     if point1[0] == point2[0]:
@@ -43,6 +49,179 @@ def make_line_of_tiles(point1, point2):
 
     return tile_lst
 
+class TileMap(object):
+    def __init__(self, tile_tex, spawnpoint_tex):
+        self.tile_tex = tile_tex
+        self.spawnpoint_tex = spawnpoint_tex
+        self.tiles = []
+        self.spawnpoints = []
+
+    def get_free(self, obj):
+        return obj not in self.tiles and obj not in self.spawnpoints
+
+    def draw(self, screen):
+        for tile in self.tiles:
+            screen.blit(self.tile_tex, tile)
+
+        for spawnpoint in self.spawnpoints:
+            screen.blit(self.spawnpoint_tex, spawnpoint)
+
+    def __getitem__(self, key):
+        if key == TILE_OBJ:
+            return self.tiles
+        elif key == SPAWNPOINT_OBJ:
+            return self.spawnpoints
+
+    def save(self, path):
+        root = Element('map')
+
+        portals_tag = SubElement(root, 'portals')
+
+        spawnpoints_tag = SubElement(root, 'spawnpoints')
+        spawnpoints_tag.text = vec_lst_to_str(self.spawnpoints)
+
+        tiles_tag = SubElement(root, 'tiles')
+        tiles_tag.text = vec_lst_to_str(self.tiles)
+
+        ElementTree(root).write(path)
+
+class TileTool(object):
+    def __init__(self, editor):
+        self.editor = editor
+
+        self.point1 = None
+        self.tile_line = None
+
+    def update(self):
+        if self.editor.input.key_pressed('CONTROL_L'):
+            if (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
+                    self.editor.input.key_pressed('SHIFT_L')):
+                self.fill_vertical()
+            elif (self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON)
+                  and self.editor.input.key_pressed('SHIFT_L')):
+                self.remove_vertical()
+            elif self.editor.input.button_tapped(LEFT_MOUSE_BUTTON):
+                self.fill_horizontal()
+            elif self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON):
+                self.remove_horizontal()
+
+        if (self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and
+                self.editor.selected not in self.editor.tilemap.tiles
+                and not self.editor.input.key_pressed('SHIFT_L')):
+
+            cmd = EditMapCommand(
+                [self.editor.selected],
+                self.editor.tilemap,
+                TILE_OBJ)
+
+            self.editor.cmd_manager.exec_cmd(cmd)
+
+        if (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
+                self.editor.input.key_pressed('SHIFT_L')):
+            if self.point1 is not None:
+                if (self.point1[0] == self.editor.selected[0] or
+                    self.point1[1] == self.editor.selected[1]):
+
+                    tile_lst = make_line_of_tiles(self.point1,
+                    self.editor.selected)
+
+                    cmd = EditMapCommand(
+                        tile_lst,
+                        self.editor.tilemap,
+                        TILE_OBJ)
+
+                    self.editor.cmd_manager.exec_cmd(cmd)
+            self.point1 = self.editor.selected
+
+        if self.editor.input.key_tapped('SHIFT_L'):
+            self.point1 = None
+
+        if (self.editor.input.button_pressed(RIGHT_MOUSE_BUTTON) and
+                self.editor.selected in self.editor.tilemap.tiles):
+
+            cmd = EditMapCommand(
+                [self.editor.selected],
+                self.editor.tilemap,
+                TILE_OBJ,
+                remove=True)
+
+            self.editor.cmd_manager.exec_cmd(cmd)
+
+        if self.point1 is not None:
+            if self.point1[0] == self.editor.selected[0]:
+                self.tile_line = make_line_of_tiles(self.point1,
+                self.editor.selected)
+            elif self.point1[1] == self.editor.selected[1]:
+                self.tile_line = make_line_of_tiles(self.point1,
+                self.editor.selected)
+            else:
+                self.tile_line = None
+        else:
+            self.tile_line = None
+
+    def draw(self, screen):
+        if self.tile_line is not None:
+            for tile in self.tile_line:
+                screen.blit(self.editor.wall_tex, tile)
+
+        if self.point1 is not None:
+            screen.blit(self.editor.wall_tex, self.point1)
+
+    def fill_horizontal(self):
+        tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
+        (DISPLAY_WIDTH, self.editor.selected[1]))
+
+        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
+            self.editor.tilemap, TILE_OBJ))
+
+    def fill_vertical(self):
+        tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
+        (self.editor.selected[0], DISPLAY_HEIGHT))
+
+        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
+            self.editor.tilemap, TILE_OBJ))
+
+    def remove_horizontal(self):
+        tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
+        (DISPLAY_WIDTH, self.editor.selected[1]))
+
+        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
+            self.editor.tilemap, TILE_OBJ, remove=True))
+
+    def remove_vertical(self):
+        tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
+        (self.editor.selected[0], DISPLAY_HEIGHT))
+
+        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
+            self.editor.tilemap, TILE_OBJ, remove=True))
+
+class SpawnpointTool(object):
+    def __init__(self, editor):
+        self.editor = editor
+
+    def update(self):
+        if (self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and
+                self.editor.tilemap.get_free(self.editor.selected)):
+
+            cmd = EditMapCommand(
+                [self.editor.selected],
+                self.editor.tilemap,
+                SPAWNPOINT_OBJ)
+
+            self.editor.cmd_manager.exec_cmd(cmd)
+        elif (self.editor.input.button_pressed(RIGHT_MOUSE_BUTTON) and
+                not self.editor.tilemap.get_free(self.editor.selected)):
+
+            cmd = EditMapCommand(
+                [self.editor.selected],
+                self.editor.tilemap,
+                SPAWNPOINT_OBJ,
+                remove=True)
+
+            self.editor.cmd_manager.exec_cmd(cmd)
+
+    def draw(self, screen):
+        pass
 
 class CommandManager(object):
     def __init__(self):
@@ -67,33 +246,33 @@ class CommandManager(object):
             self.undo_stack.append(cmd)
             cmd.do()
 
-
-class ChangeTilesCommand(object):
-    def __init__(self, tiles, tilemap, remove=False):
-        self.tile_lst = tiles
+class EditMapCommand(object):
+    def __init__(self, obj_lst, tilemap, obj_type, remove=False):
+        self.obj_lst = obj_lst
         self.tilemap = tilemap
-        self.tiles_changed = []
+        self.obj_type = obj_type
+        self.objs_changed = []
         self.remove = remove
 
     def do(self):
-        for tile in self.tile_lst:
+        for obj in self.obj_lst:
             if self.remove:
-                if tile in self.tilemap:
-                    self.tilemap.remove(tile)
-                    self.tiles_changed.append(tile)
+                if obj in self.tilemap[self.obj_type]:
+                    self.tilemap[self.obj_type].remove(obj)
+                    self.objs_changed.append(obj)
             else:
-                if tile not in self.tilemap:
-                    self.tilemap.append(tile)
-                    self.tiles_changed.append(tile)
+                if self.tilemap.get_free(obj):
+                    self.tilemap[self.obj_type].append(obj)
+                    self.objs_changed.append(obj)
 
     def undo(self):
-        for tile in self.tiles_changed:
+        for obj in self.objs_changed:
             if self.remove:
-                if tile not in self.tilemap:
-                    self.tilemap.append(tile)
+                if self.tilemap.get_free(obj):
+                    self.tilemap[self.obj_type].append(obj)
             else:
-                if tile in self.tilemap:
-                    self.tilemap.remove(tile)
+                if obj in self.tilemap[self.obj_type]:
+                    self.tilemap[self.obj_type].remove(obj)
 
 class InputManager(object):
     def __init__(self, init_mouse_x=0, init_mouse_y=0):
@@ -177,17 +356,21 @@ class InitState(object):
 class EditState(object):
     def __init__(self, state_context):
         self.context = state_context
+        self.input = self.context.input
         self.cmd_manager = CommandManager()
 
         self.show_grid = True
         self.show_help_lines = True
 
-        self.point1 = None
-        self.tile_line = None
         self.selected = None
 
-        self.tiles = []
         self.wall_tex = pygame.image.load('../gfx/wall.png').convert()
+        self.spawnpoint_tex = (
+            pygame.image.load('../gfx/spawnpoint.png').convert())
+
+        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
+
+        self.tool = TileTool(self)
 
     def file_save(self):
         pass
@@ -218,90 +401,44 @@ class EditState(object):
             command=None)
 
     def update(self):
+        # Undo & redo
         if self.context.input.key_pressed('CONTROL_L'):
             if self.context.input.key_tapped('Z'):
                 self.cmd_manager.undo()
             elif self.context.input.key_tapped('Y'):
                 self.cmd_manager.redo()
 
+            # Toggle grid
             if self.context.input.key_tapped('G'):
                 self.show_grid = not self.show_grid
 
+            # Toggle 'help lines'
             if self.context.input.key_tapped('H'):
                 self.show_help_lines = not self.show_help_lines
 
-            if (self.context.input.button_tapped(LEFT_MOUSE_BUTTON) and
-                    self.context.input.key_pressed('SHIFT_L')):
-                self.fill_vertical()
-            elif (self.context.input.button_tapped(RIGHT_MOUSE_BUTTON)
-                  and self.context.input.key_pressed('SHIFT_L')):
-                self.remove_vertical()
-            elif self.context.input.button_tapped(LEFT_MOUSE_BUTTON):
-                self.fill_horizontal()
-            elif self.context.input.button_tapped(RIGHT_MOUSE_BUTTON):
-                self.remove_horizontal()
+        if self.context.input.key_tapped('T'):
+            self.tool = TileTool(self)
+        elif self.context.input.key_tapped('S'):
+            self.tool = SpawnpointTool(self)
 
+        # Update selected cell
         self.selected = (
             (self.context.input.mouse_x / CELL_SIZE) * CELL_SIZE,
             (self.context.input.mouse_y / CELL_SIZE) * CELL_SIZE)
 
-        if (self.context.input.button_pressed(LEFT_MOUSE_BUTTON) and
-                self.selected not in self.tiles and not
-                self.context.input.key_pressed('SHIFT_L')):
-            cmd = ChangeTilesCommand([self.selected], self.tiles)
-            self.cmd_manager.exec_cmd(cmd)
-
-        if (self.context.input.button_tapped(LEFT_MOUSE_BUTTON) and
-                self.context.input.key_pressed('SHIFT_L')):
-            if self.point1 is not None:
-                if (self.point1[0] == self.selected[0] or
-                    self.point1[1] == self.selected[1]):
-
-                    tile_lst = make_line_of_tiles(self.point1,
-                    self.selected)
-
-                    cmd = ChangeTilesCommand(tile_lst, self.tiles)
-                    self.cmd_manager.exec_cmd(cmd)
-            self.point1 = self.selected
-
-        if self.context.input.key_tapped('SHIFT_L'):
-            self.point1 = None
-
-        if (self.context.input.button_pressed(RIGHT_MOUSE_BUTTON) and
-                self.selected in self.tiles):
-            cmd = ChangeTilesCommand([self.selected], self.tiles,
-                remove=True)
-            self.cmd_manager.exec_cmd(cmd)
-
-        if self.point1 is not None:
-            if self.point1[0] == self.selected[0]:
-                self.tile_line = make_line_of_tiles(self.point1,
-                self.selected)
-            elif self.point1[1] == self.selected[1]:
-                self.tile_line = make_line_of_tiles(self.point1,
-                self.selected)
-            else:
-                self.tile_line = None
-        else:
-            self.tile_line = None
+        self.tool.update()
 
     def draw(self, screen):
         if self.show_grid:
             self.draw_grid(screen)
 
-        for tile in self.tiles:
-            screen.blit(self.wall_tex, tile)
+        self.tilemap.draw(screen)
+
+        self.tool.draw(screen)
 
         pygame.draw.rect(screen, ORANGE,
             pygame.Rect(self.selected,
             (CELL_SIZE, CELL_SIZE)))
-
-        if self.tile_line is not None:
-            for tile in self.tile_line:
-                screen.blit(self.wall_tex, tile)
-
-        if self.point1 is not None:
-            screen.blit(self.wall_tex, self.point1)
 
         if self.show_help_lines:
             half_size = CELL_SIZE / 2
@@ -322,35 +459,6 @@ class EditState(object):
         for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
             pygame.draw.line(screen, DARK_GRAY, (0, ypos),
                 (DISPLAY_WIDTH, ypos))
-
-    def fill_horizontal(self):
-        tile_lst = make_line_of_tiles((0, self.selected[1]),
-        (DISPLAY_WIDTH, self.selected[1]))
-
-        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
-            self.tiles))
-
-    def fill_vertical(self):
-        tile_lst = make_line_of_tiles((self.selected[0], 0),
-        (self.selected[0], DISPLAY_HEIGHT))
-
-        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
-            self.tiles))
-
-    def remove_horizontal(self):
-        tile_lst = make_line_of_tiles((0, self.selected[1]),
-        (DISPLAY_WIDTH, self.selected[1]))
-
-        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
-            self.tiles,
-        remove=True))
-
-    def remove_vertical(self):
-        tile_lst = make_line_of_tiles((self.selected[0], 0),
-        (self.selected[0], DISPLAY_HEIGHT))
-
-        self.cmd_manager.exec_cmd(ChangeTilesCommand(tile_lst,
-            self.tiles, remove=True))
 
 class MapEditor(object):
     def __init__(self):
