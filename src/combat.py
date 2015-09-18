@@ -131,13 +131,19 @@ class Weapon(object):
         self.firerate = 1. / config['freq']
         self.elapsed_t = 0
         self.firing = False
+        self.time_since_last_shot = 0
 
     def set_firing(self, value):
         """Set 'firing' property."""
+        if (self.firing and not value and 
+            self.time_since_last_shot >= self.firerate):
+            self.elapsed_t = self.firerate
         self.firing = value
 
     def update(self, delta_time):
         """Update weapon."""
+        self.time_since_last_shot += delta_time
+        
         if self.firing:
             self.elapsed_t += delta_time
 
@@ -148,12 +154,14 @@ class Weapon(object):
                     head = self.owner.snake[0]
                     heading = self.owner.snake.heading
 
-                    if add_vecs(head, mul_vec(heading, 1)) not in \
-                        self.game.tilemap.tiles and \
-                            head not in self.game.tilemap.tiles:
+                    if (add_vecs(head, mul_vec(heading, 1)) not in 
+                    self.game.tilemap.tiles and head not in 
+                    self.game.tilemap.tiles):
                         self.ammo -= 1
                         self.game.shot_manager.create_shot(
                             add_vecs(head, mul_vec(heading, 2)),
-                            heading, self.owner.snake.head_tag, self.shot)
+                            heading, self.owner.snake.head_tag, 
+                            self.shot)
+                    self.time_since_last_shot = 0
             else:
                 self.firing = False
