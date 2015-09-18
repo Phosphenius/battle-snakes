@@ -113,19 +113,7 @@ class TileTool(object):
                 self.fill_horizontal()
             elif self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON):
                 self.remove_horizontal()
-
-        if (self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and
-                self.editor.selected not in self.editor.tilemap.tiles
-                and not self.editor.input.key_pressed('SHIFT_L')):
-
-            cmd = EditMapCommand(
-                [self.editor.selected],
-                self.editor.tilemap,
-                TILE_OBJ)
-
-            self.editor.cmd_manager.exec_cmd(cmd)
-
-        if (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
+        elif (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
                 self.editor.input.key_pressed('SHIFT_L')):
             if self.point1 is not None:
                 if (self.point1[0] == self.editor.selected[0] or
@@ -142,6 +130,17 @@ class TileTool(object):
                     self.editor.cmd_manager.exec_cmd(cmd)
             self.point1 = self.editor.selected
 
+        if (self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and
+                self.editor.selected not in self.editor.tilemap.tiles
+                and not self.editor.input.key_pressed('SHIFT_L')):
+
+            cmd = EditMapCommand(
+                [self.editor.selected],
+                self.editor.tilemap,
+                TILE_OBJ)
+
+            self.editor.cmd_manager.exec_cmd(cmd)
+        
         if self.editor.input.key_tapped('SHIFT_L'):
             self.point1 = None
 
