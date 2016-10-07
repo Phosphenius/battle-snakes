@@ -12,7 +12,7 @@ from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
 from utils import add_vecs
-from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN
+from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN, BOMB1_DROPPER
 from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
                       BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
@@ -53,7 +53,8 @@ class PlayerBase(object):
         self.weapons = deque((
             Weapon(self.game, self, STD_MG),
             Weapon(self.game, self, H_GUN),
-            Weapon(self.game, self, PLASMA_GUN)))
+            Weapon(self.game, self, PLASMA_GUN),
+            Weapon(self.game, self, BOMB1_DROPPER)))
         self.pwrup_targets = {'points': 'points', 'grow': 'snake.grow',
                               'speed': 'snake.speed', 'boost': 'boost',
                               'lifes': 'lifes', 'hp': 'snake.hitpoints'}
