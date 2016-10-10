@@ -24,10 +24,6 @@ class SnakeNormalState(object):
     def __init__(self, snake):
         self.snake = snake
 
-    def get_name(self):
-        """Return state name."""
-        return 'Normal'
-
     def update(self, delta_time):
         """Update state."""
         self.snake.move()
@@ -45,10 +41,6 @@ class SnakeInvincibleState(object):
         self.lifetime = lifetime
         self.elapsed_lifetime = 0.
         self.elapsed_blink = 0.
-
-    def get_name(self):
-        """Return state name."""
-        return 'Invincible'
 
     def update(self, delta_time):
         """Update state."""

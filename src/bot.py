@@ -45,6 +45,7 @@ class BotCollectState(BotState):
         self.map_height = self.bot.game.tilemap.height
 
     def compute_pot_field(self):
+        """Compute potential field."""
         # Get nearest powerup.
         self.target_pwrup = copy(min([(m_distance(self.bot.snake[0],
                                                   pwrup.pos), pwrup) for

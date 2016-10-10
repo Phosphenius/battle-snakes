@@ -1,6 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+"""
+Map editor using a pygame window embedded into a tkinter frame
+"""
+
 import Tkinter as tk
 import tkFileDialog as filedia
 import os
@@ -12,6 +16,7 @@ import pygame
 
 from colors import BLACK, ORANGE, GREEN, DARK_GRAY
 from utils import vec_lst_to_str
+from fsm import FiniteStateMachine
 
 
 FPS = 30
@@ -46,6 +51,7 @@ def make_line_of_tiles(point1, point2):
             tile_lst.append((xpos, point1[1]))
 
     return tile_lst
+
 
 class TileMap(object):
     def __init__(self, tile_tex, spawnpoint_tex):
@@ -94,6 +100,7 @@ class TileMap(object):
 
         ElementTree(root).write(path)
 
+
 class TileTool(object):
     def __init__(self, editor):
         self.editor = editor
@@ -114,13 +121,13 @@ class TileTool(object):
             elif self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON):
                 self.remove_horizontal()
         elif (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
-                self.editor.input.key_pressed('SHIFT_L')):
+              self.editor.input.key_pressed('SHIFT_L')):
             if self.point1 is not None:
                 if (self.point1[0] == self.editor.selected[0] or
-                    self.point1[1] == self.editor.selected[1]):
+                        self.point1[1] == self.editor.selected[1]):
 
                     tile_lst = make_line_of_tiles(self.point1,
-                    self.editor.selected)
+                                                  self.editor.selected)
 
                     cmd = EditMapCommand(
                         tile_lst,
@@ -140,7 +147,7 @@ class TileTool(object):
                 TILE_OBJ)
 
             self.editor.cmd_manager.exec_cmd(cmd)
-        
+
         if self.editor.input.key_tapped('SHIFT_L'):
             self.point1 = None
 
@@ -158,10 +165,10 @@ class TileTool(object):
         if self.point1 is not None:
             if self.point1[0] == self.editor.selected[0]:
                 self.tile_line = make_line_of_tiles(self.point1,
-                self.editor.selected)
+                                                    self.editor.selected)
             elif self.point1[1] == self.editor.selected[1]:
                 self.tile_line = make_line_of_tiles(self.point1,
-                self.editor.selected)
+                                                    self.editor.selected)
             else:
                 self.tile_line = None
         else:
@@ -177,31 +184,41 @@ class TileTool(object):
 
     def fill_horizontal(self):
         tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
-        (DISPLAY_WIDTH, self.editor.selected[1]))
+                                      (DISPLAY_WIDTH,
+                                       self.editor.selected[1]))
 
-        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
-            self.editor.tilemap, TILE_OBJ))
+        cmd = EditMapCommand(tile_lst, self.editor.tilemap, TILE_OBJ)
+        self.editor.cmd_manager.exec_cmd(cmd)
 
     def fill_vertical(self):
         tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
-        (self.editor.selected[0], DISPLAY_HEIGHT))
+                                      (self.editor.selected[0],
+                                       DISPLAY_HEIGHT))
 
-        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
-            self.editor.tilemap, TILE_OBJ))
+        cmd = EditMapCommand(tile_lst, self.editor.tilemap, TILE_OBJ)
+        self.editor.cmd_manager.exec_cmd(cmd)
 
     def remove_horizontal(self):
         tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
-        (DISPLAY_WIDTH, self.editor.selected[1]))
+                                      (DISPLAY_WIDTH,
+                                       self.editor.selected[1]))
 
-        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
-            self.editor.tilemap, TILE_OBJ, remove=True))
+        cmd = EditMapCommand(tile_lst,
+                             self.editor.tilemap,
+                             TILE_OBJ, remove=True)
+
+        self.editor.cmd_manager.exec_cmd(cmd)
 
     def remove_vertical(self):
         tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
-        (self.editor.selected[0], DISPLAY_HEIGHT))
+                                      (self.editor.selected[0],
+                                       DISPLAY_HEIGHT))
 
-        self.editor.cmd_manager.exec_cmd(EditMapCommand(tile_lst,
-            self.editor.tilemap, TILE_OBJ, remove=True))
+        cmd = EditMapCommand(tile_lst, self.editor.tilemap, TILE_OBJ,
+                             remove=True)
+
+        self.editor.cmd_manager.exec_cmd(cmd)
+
 
 class SpawnpointTool(object):
     def __init__(self, editor):
@@ -218,7 +235,7 @@ class SpawnpointTool(object):
 
             self.editor.cmd_manager.exec_cmd(cmd)
         elif (self.editor.input.button_pressed(RIGHT_MOUSE_BUTTON) and
-                not self.editor.tilemap.get_free(self.editor.selected)):
+              not self.editor.tilemap.get_free(self.editor.selected)):
 
             cmd = EditMapCommand(
                 [self.editor.selected],
@@ -231,28 +248,39 @@ class SpawnpointTool(object):
     def draw(self, screen):
         pass
 
+
 class CommandManager(object):
+
+    """
+    Manager for undo/redo functionality, implements the command pattern.
+    """
+
     def __init__(self):
         self.undo_stack = deque(maxlen=MAX_UNDO_REDO)
         self.redo_stack = deque(maxlen=MAX_UNDO_REDO)
 
     def exec_cmd(self, cmd):
+        """
+        Execute a command and push it onto the undo stack.
+        """
         cmd.do()
 
-        if hasattr(cmd, 'undo'):
-            self.undo_stack.append(cmd)
+        self.undo_stack.append(cmd)
 
     def undo(self):
+        """Undo a command."""
         if len(self.undo_stack) > 0:
             cmd = self.undo_stack.pop()
             self.redo_stack.append(cmd)
             cmd.undo()
 
     def redo(self):
+        """Redo a command."""
         if len(self.redo_stack) > 0:
             cmd = self.redo_stack.pop()
             self.undo_stack.append(cmd)
             cmd.do()
+
 
 class EditMapCommand(object):
     def __init__(self, obj_lst, tilemap, obj_type, remove=False):
@@ -282,6 +310,7 @@ class EditMapCommand(object):
                 if obj in self.tilemap[self.obj_type]:
                     self.tilemap[self.obj_type].remove(obj)
 
+
 class InputManager(object):
     def __init__(self, init_mouse_x=0, init_mouse_y=0):
         self.mouse_x = init_mouse_x
@@ -310,13 +339,13 @@ class InputManager(object):
         elif event.keysym == 'Meta_R':
             self.curr_key_state.remove('ALT_R')
         elif (event.keysym == 'Escape' and
-                'CONTROL_L' in self.curr_key_state):
+              'CONTROL_L' in self.curr_key_state):
             self.curr_key_state.remove('CONTROL_L')
         else:
             try:
                 self.curr_key_state.remove(event.keysym.upper())
             except:
-                pass # Don't give a shit!
+                pass  # Don't do anything.
 
     def capture_button_press(self, event):
         if event.num not in self.curr_button_state:
@@ -348,6 +377,7 @@ class InputManager(object):
         return (button not in self.curr_button_state and
                 button in self.prev_button_state)
 
+
 class InitState(object):
     def __init__(self, state_context):
         self.context = state_context
@@ -363,6 +393,7 @@ class InitState(object):
 
     def draw(self, screen):
         pass
+
 
 class EditState(object):
     def __init__(self, state_context):
@@ -386,12 +417,19 @@ class EditState(object):
         self.save_path = u''
 
     def file_save(self):
+        """
+        Write map data as xml to the file specified in 'save_path'.
+        """
         if self.save_path is not u'':
             self.tilemap.save(self.save_path)
         else:
             self.file_save_as()
 
     def file_save_as(self):
+        """
+        Open file dialog and write map data as xml to the file
+        selected by the user.
+        """
         result = filedia.asksaveasfilename(
             defaultextension='.xml',
             initialdir='/',
@@ -403,16 +441,18 @@ class EditState(object):
             self.tilemap.save(result)
 
     def enter(self):
+        """Enter edit state and change the file menu accordingly."""
         self.context.file_menu.entryconfig(3, state=tk.NORMAL,
-            command=self.file_save)
+                                           command=self.file_save)
         self.context.file_menu.entryconfig(4, state=tk.NORMAL,
-            command=self.file_save_as)
+                                           command=self.file_save_as)
 
     def leave(self):
+        """Leave edit state and change the file menu accordingly."""
         self.context.file_menu.entryconfig(3, state=tk.DISABLED,
-            command=None)
+                                           command=None)
         self.context.file_menu.entryconfig(4, state=tk.DISABLED,
-            command=None)
+                                           command=None)
 
     def update(self):
         # Undo & redo
@@ -457,31 +497,37 @@ class EditState(object):
         self.tool.draw(screen)
 
         pygame.draw.rect(screen, ORANGE,
-            pygame.Rect(self.selected,
-            (CELL_SIZE, CELL_SIZE)))
+                         pygame.Rect(self.selected,
+                                     (CELL_SIZE, CELL_SIZE)))
 
         if self.show_help_lines:
             half_size = CELL_SIZE / 2
 
-            pygame.draw.line(screen, GREEN,
-            (self.selected[0] + half_size, 0),
-            (self.selected[0] + half_size, DISPLAY_HEIGHT))
+            point1 = (self.selected[0] + half_size, 0)
+            point2 = (self.selected[0] + half_size, DISPLAY_HEIGHT)
 
-            pygame.draw.line(screen, GREEN,
-            (0, self.selected[1] + half_size),
-            (DISPLAY_WIDTH, self.selected[1] + half_size))
+            pygame.draw.line(screen, GREEN, point1, point2)
+
+            point1 = (0, self.selected[1] + half_size)
+            point2 = (DISPLAY_WIDTH, self.selected[1] + half_size)
+
+            pygame.draw.line(screen, GREEN, point1, point2)
 
     def draw_grid(self, screen):
+        """Draw a grid"""
         for xpos in range(0, DISPLAY_WIDTH, CELL_SIZE):
             pygame.draw.line(screen, DARK_GRAY, (xpos, 0),
-                (xpos, DISPLAY_HEIGHT))
+                             (xpos, DISPLAY_HEIGHT))
 
         for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
             pygame.draw.line(screen, DARK_GRAY, (0, ypos),
-                (DISPLAY_WIDTH, ypos))
+                             (DISPLAY_WIDTH, ypos))
 
-class MapEditor(object):
+
+class MapEditor(FiniteStateMachine):
     def __init__(self):
+        FiniteStateMachine.__init__(self, InitState(self))
+
         self.input = InputManager(DISPLAY_WIDTH * 0.5,
                                   DISPLAY_HEIGHT * 0.5)
 
@@ -491,7 +537,7 @@ class MapEditor(object):
         self.root.bind('<KeyRelease>', self.input.capture_key_release)
         self.root.bind('<ButtonPress>', self.input.capture_button_press)
         self.root.bind('<ButtonRelease>',
-            self.input.capture_button_release)
+                       self.input.capture_button_release)
 
         self.root.rowconfigure(0, weight=1)
         self.root.columnconfigure(0, weight=1)
@@ -501,7 +547,7 @@ class MapEditor(object):
         top['menu'] = self.menu_bar
         self.file_menu = tk.Menu(self.menu_bar, tearoff=False)
         self.menu_bar.add_cascade(label='File', menu=self.file_menu,
-            underline=0)
+                                  underline=0)
 
         self.file_menu.add_command(
             label='New',
@@ -544,17 +590,8 @@ class MapEditor(object):
         self.fps_clock = pygame.time.Clock()
         pygame.init()
         self.screen = pygame.display.set_mode((DISPLAY_WIDTH,
-                DISPLAY_HEIGHT))
-
+                                               DISPLAY_HEIGHT))
         self.quit = False
-
-        self.curr_state = InitState(self)
-        self.curr_state.enter()
-
-    def change_state(self, new_state):
-        self.curr_state.leave()
-        self.curr_state = new_state
-        self.curr_state.enter()
 
     def file_new(self):
         self.change_state(EditState(self))
@@ -566,6 +603,9 @@ class MapEditor(object):
             #~ title='Open map')
 
     def update(self):
+        """
+        Update editor, get user input
+        """
         if self.input.key_pressed('CONTROL_L'):
             if self.input.key_pressed('Q'):
                 self.quit = True

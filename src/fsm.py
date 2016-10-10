@@ -28,7 +28,7 @@ class State(object):
 class FiniteStateMachine(object):
 
     """
-    Simple, abstract base class for a finite state machine.
+    Abstract base class for a finite state machine.
     """
 
     __metaclass__ = ABCMeta
@@ -38,6 +38,10 @@ class FiniteStateMachine(object):
         self.curr_state.enter()
 
     def change_state(self, new_state):
+        """
+        Transition to another state by calling the 'leave' method
+        of the current state and the 'enter' method for the new state.
+        """
         self.curr_state.leave()
         self.curr_state = new_state
         self.curr_state.enter()

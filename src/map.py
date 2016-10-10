@@ -56,7 +56,7 @@ class Map(object):
                             if point1 is not None and point2 is not None:
                                 self.portals.update(
                                     {point1: (point2, p2_dir),
-                                        point2: (point1, p1_dir)})
+                                     point2: (point1, p1_dir)})
 
         field = [None] * self.width
         for xpos in xrange(self.width):

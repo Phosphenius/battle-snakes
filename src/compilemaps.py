@@ -42,7 +42,7 @@ def main():
         shutil.copy(os.path.join(src, 'map.xml'), MAP_DEST_DIR)
         os.rename(os.path.join(MAP_DEST_DIR, 'map.xml'),
                   os.path.join(MAP_DEST_DIR,
-                  os.path.basename(src) + '.xml'))
+                               os.path.basename(src) + '.xml'))
 
         mapsurf = pygame.image.load(os.path.join(src, 'map.png'))
         mapdata = pygame.PixelArray(mapsurf)

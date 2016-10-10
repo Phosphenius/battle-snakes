@@ -16,18 +16,18 @@ DEFAULT_EMITTER = HEAD
 MG_SHOT1 = {'tex': 'mg_shot1', 'speed': 42, 'damage': 10}
 SHOT1 = {'tex': 'shot1', 'speed': 70, 'damage': 100}
 PLASMA_SHOT = {'tex': 'shot2', 'speed': 30, 'damage': 25,
-            'slowdown': 2.5}
+               'slowdown': 2.5}
 
 # Bombs & Mines
-BOMB1 = {'tex': 'bomb1', 'damage':50, 'lifetime': 30}
+BOMB1 = {'tex': 'bomb1', 'damage': 50, 'lifetime': 30}
 
 # Weapons
 STD_MG = {'shot': MG_SHOT1, 'type': 'MG', 'ammo': 999999, 'freq': 8}
 H_GUN = {'shot': SHOT1, 'type': 'Cannon', 'ammo': 20, 'freq': 1.3}
 PLASMA_GUN = {'shot': PLASMA_SHOT, 'type': 'Plasma', 'ammo': 50,
-            'freq': 2.5}
+              'freq': 2.5}
 BOMB1_DROPPER = {'shot': BOMB1, 'type': 'Bomb', 'ammo': 10, 'freq': 3,
-                'emitter': TAIL}
+                 'emitter': TAIL}
 
 DEFAULT_SHOT_BLINK_RATE = 100000
 DEFAULT_SHOT_LIFETIME = 3.5
@@ -151,7 +151,7 @@ class Weapon(object):
     def set_firing(self, value):
         """Set 'firing' property."""
         if (self.firing and not value and
-            self.time_since_last_shot >= self.firerate):
+                self.time_since_last_shot >= self.firerate):
             self.elapsed_t = self.firerate
         self.firing = value
 
@@ -174,11 +174,11 @@ class Weapon(object):
                     elif self.emitter == TAIL:
                         head = self.owner.snake[len(self.owner.snake.body)-1]
                         heading = (-self.owner.snake.heading[0],
-                                    -self.owner.snake.heading[1])
+                                   -self.owner.snake.heading[1])
 
                     if (add_vecs(head, mul_vec(heading, 1)) not in
-                    self.game.tilemap.tiles and head not in
-                    self.game.tilemap.tiles):
+                            self.game.tilemap.tiles and head not in
+                            self.game.tilemap.tiles):
                         self.ammo -= 1
                         self.game.shot_manager.create_shot(
                             add_vecs(head, mul_vec(heading, 2)),
