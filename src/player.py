@@ -26,12 +26,12 @@ CTRLS2 = {'left': K_a, 'right': K_d, 'up': K_w, 'down': K_s, 'action': K_c,
 
 # -- Players --
 PLAYER1 = {'id': '1', 'color': BLUE, 'ctrls': CTRLS1,
-           'tex': 'snake_body_p1'}
+           'skin': 'skin01'}
 
 PLAYER2 = {'id': '2', 'color': RED, 'ctrls': CTRLS2,
-           'tex': 'snake_body_p2'}
+           'skin': 'skin01'}
 
-BOT = {'id': 2, 'color': RED, 'tex': 'snake_body_p2'}
+BOT = {'id': 2, 'color': RED, 'skin': 'skin01'}
 
 
 class PlayerBase(object):
@@ -45,7 +45,7 @@ class PlayerBase(object):
         self.pid = config['id']
         self.color = config['color']
         self.snake = Snake(game, game.get_spawnpoint(),
-                           config['tex'], self.pid, self.snake_killed)
+                           config['skin'], self.pid, self.snake_killed)
         self._lifes = INIT_LIFES
         self.points = 0
         self._boost = INIT_BOOST

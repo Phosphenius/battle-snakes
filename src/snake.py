@@ -3,9 +3,11 @@
 Snake module.
 """
 
+from pygame import Rect
+
 from settings import (INVINCIBILITY_BLINK_RATE, MAX_HITPOINTS,
                       INIT_SPEED, MIN_SPEED, MAX_SPEED)
-from utils import add_vecs, normalize
+from utils import add_vecs, sub_vecs, normalize, m_distance
 
 # -- Directions --
 RIGHT = (+1, 0)
@@ -13,6 +15,94 @@ LEFT = (-1, 0)
 UP = (0, -1)
 DOWN = (0, +1)
 DIRECTIONS = {'right': RIGHT, 'left': LEFT, 'up': UP, 'down': DOWN}
+
+STRAIGHT1_V = Rect(20, 20, 10, 10)
+STRAIGHT1_H = Rect(20, 30, 10, 10)
+STRAIGHT2_V = Rect(30, 20, 10, 10)
+STRAIGHT2_H = Rect(30, 30, 10, 10)
+
+N = 0x1
+E = 0x2
+S = 0x4
+W = 0x8
+SE = S + E
+SW = S + W
+NE = N + E
+NW = N + W
+
+STRAIGHT = 0x10
+VERTICAL = 0x20
+
+# Maps vectors to their corresponding flags.
+VEC_TO_DIRFLAG = {(0, -1): N, (1, 0): E, (0, 1): S, (-1, 0): W}
+
+HEAD = {N: Rect(00, 00, 10, 10), S: Rect(10, 10, 10, 10),
+        E: Rect(10, 00, 10, 10), W: Rect(00, 10, 10, 10)}
+
+TAIL = {N: Rect(20, 00, 10, 10), S: Rect(30, 10, 10, 10),
+        E: Rect(30, 00, 10, 10), W: Rect(20, 10, 10, 10)}
+
+TURN = {SE: Rect(00, 20, 10, 10), SW: Rect(10, 20, 10, 10),
+        NE: Rect(00, 30, 10, 10), NW: Rect(10, 30, 10, 10)}
+
+
+def get_arrangement(snake, index, tilemap):
+
+    """
+    Get the arrangement of a snake part in relation to it's neighboring
+    parts while taking the map and it's portals into account as well.
+    This is to determine which part of the skin texture to use for
+    rendering said part.
+    """
+
+    ax, ay = a = snake[index - 1]
+    bx, by = b = snake[index]
+    cx, cy = c = snake[index + 1]
+
+    ba = sub_vecs(a, b)
+    bc = sub_vecs(c, b)
+
+    ba_apart = m_distance(a, b) > 1
+    bc_apart = m_distance(c, b) > 1
+
+    a_on_edge = tilemap.on_edge(a)
+
+    if ba_apart:
+        if a_on_edge:
+            ba = normalize(ba)
+
+        next_portal = None
+        for portal in tilemap.portals.keys():
+            if m_distance(portal, b) == 1:
+                next_portal = portal
+                break
+
+        if next_portal:
+            a = next_portal
+            ax, ay = a
+            ba = sub_vecs(a, b)
+
+    if bc_apart:
+        if a_on_edge:
+            bc = normalize((-bc[0], -bc[1]))
+
+        next_portal = None
+        for portal in tilemap.portals.keys():
+            if m_distance(portal, b) == 1:
+                next_portal = portal
+                break
+
+        if next_portal:
+            c = next_portal
+            cx, cy = c
+            bc = sub_vecs(c, b)
+
+    if ax == bx == cx:
+        return VERTICAL | STRAIGHT
+    elif ay == by == cy:
+        return STRAIGHT
+    else:
+        return VEC_TO_DIRFLAG[ba] | VEC_TO_DIRFLAG[bc]
 
 
 class SnakeNormalState(object):
@@ -68,11 +158,11 @@ class Snake(object):
     Represents a snake.
     """
 
-    def __init__(self, game, pos, tex, _id, killed_handler):
+    def __init__(self, game, pos, skin, _id, killed_handler):
         self.game = game
         self.body_tag = '#p{0}-body'.format(_id)
         self.head_tag = '#p{0}-head'.format(_id)
-        self.tex = tex
+        self.skin = skin
         self.body = [pos, (pos[0] + 1, pos[1])]
         self.heading = None
         self._hitpoints = MAX_HITPOINTS
@@ -237,9 +327,43 @@ class Snake(object):
         if not self.isalive:
             return
         if self.isvisible:
-            for i, body in enumerate(self.body):
-                tex = self.tex if i != 0 else 'snake_head'
-                self.game.graphics.draw(tex, body)
+            body_len = len(self.body)
+            area = None
+
+            # Needs refactoring, indentation is way too deep...
+            for index, part in enumerate(self.body):
+                if index == 0:
+                    if self.heading and self.heading != (0, 0):
+                        area = HEAD[VEC_TO_DIRFLAG[self.heading]]
+                    else:
+                        area = HEAD[W]
+
+                elif 0 < index < (body_len - 1):
+                    argm = get_arrangement(self.body, index,
+                                           self.game.tilemap)
+
+                    if argm & STRAIGHT == STRAIGHT:
+                        if argm & VERTICAL == VERTICAL:
+                            if index % 2:
+                                area = STRAIGHT1_V
+                            else:
+                                area = STRAIGHT2_V
+                        else:
+                            if index % 2:
+                                area = STRAIGHT1_H
+                            else:
+                                area = STRAIGHT2_H
+                    else:
+                        area = TURN[argm & 15]
+                else:
+                    if self.heading and self.heading != (0, 0):
+                        vec = sub_vecs(self.body[body_len-2],
+                                       self.body[body_len-1])
+                        area = TAIL[VEC_TO_DIRFLAG[normalize(vec)]]
+                    else:
+                        area = TAIL[W]
+
+                self.game.graphics.draw(self.skin, part, area=area)
 
     def __setitem__(self, i, item):
         self.body[i] = item

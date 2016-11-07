@@ -46,15 +46,18 @@ class GraphicsManager(object):
 
             self.textures[os.path.splitext(os.path.split(img)[1])[0]] = surf
 
-    def draw(self, tex_name, pos, gridcoords=True, offset=(0, PANEL_H)):
+    def draw(self, tex_name, pos, gridcoords=True, offset=(0, PANEL_H),
+             area=None):
         """Draw a texture."""
         if tex_name not in self.textures:
             raise Exception('No such texture: {0}'.format(tex_name))
         if gridcoords:
             self.surf.blit(self.textures[tex_name],
-                           add_vecs(mul_vec(pos, CELL_SIZE), offset))
+                           add_vecs(mul_vec(pos, CELL_SIZE), offset),
+                           area=area)
         else:
-            self.surf.blit(self.textures[tex_name], add_vecs(pos, offset))
+            self.surf.blit(self.textures[tex_name],
+                           add_vecs(pos, offset), area=area)
 
 
 class KeyManager(object):
