@@ -46,15 +46,24 @@ TURN = {SE: Rect(00, 20, 10, 10), SW: Rect(10, 20, 10, 10),
         NE: Rect(00, 30, 10, 10), NW: Rect(10, 30, 10, 10)}
 
 
-def get_arrangement(snake, index, tilemap):
+def get_next_to_portal(pos, tilemap):
+    """Determine whether pos is right next to a portal.
+    :return: The portal next to pos or None
+    """
+    for portal in tilemap.portals.keys():
+        if m_distance(portal, pos) == 1:
+            return portal
 
+    return None
+
+
+def get_arrangement(snake, index, tilemap):
     """
     Get the arrangement of a snake part in relation to it's neighboring
     parts while taking the map and it's portals into account as well.
     This is to determine which part of the skin texture to use for
     rendering said part.
     """
-
     ax, ay = a = snake[index - 1]
     bx, by = b = snake[index]
     cx, cy = c = snake[index + 1]
@@ -71,14 +80,9 @@ def get_arrangement(snake, index, tilemap):
         if a_on_edge:
             ba = normalize(ba)
 
-        next_portal = None
-        for portal in tilemap.portals.keys():
-            if m_distance(portal, b) == 1:
-                next_portal = portal
-                break
-
-        if next_portal:
-            a = next_portal
+        portal = get_next_to_portal(b, tilemap)
+        if portal:
+            a = portal
             ax, ay = a
             ba = sub_vecs(a, b)
 
@@ -86,14 +90,10 @@ def get_arrangement(snake, index, tilemap):
         if a_on_edge:
             bc = normalize((-bc[0], -bc[1]))
 
-        next_portal = None
-        for portal in tilemap.portals.keys():
-            if m_distance(portal, b) == 1:
-                next_portal = portal
-                break
+        portal = get_next_to_portal(b, tilemap)
 
-        if next_portal:
-            c = next_portal
+        if portal:
+            c = portal
             cx, cy = c
             bc = sub_vecs(c, b)
 
@@ -329,6 +329,7 @@ class Snake(object):
         if self.isvisible:
             body_len = len(self.body)
             area = None
+            tilemap = self.game.tilemap
 
             # Needs refactoring, indentation is way too deep...
             for index, part in enumerate(self.body):
@@ -339,8 +340,7 @@ class Snake(object):
                         area = HEAD[W]
 
                 elif 0 < index < (body_len - 1):
-                    argm = get_arrangement(self.body, index,
-                                           self.game.tilemap)
+                    argm = get_arrangement(self.body, index, tilemap)
 
                     if argm & STRAIGHT == STRAIGHT:
                         if argm & VERTICAL == VERTICAL:
@@ -357,8 +357,18 @@ class Snake(object):
                         area = TURN[argm & 15]
                 else:
                     if self.heading and self.heading != (0, 0):
-                        vec = sub_vecs(self.body[body_len-2],
-                                       self.body[body_len-1])
+                        tail = self.body[body_len-1]
+                        second_last = self.body[body_len-2]
+                        apart = m_distance(tail, second_last) > 1
+
+                        if apart:
+                            portal = get_next_to_portal(tail, tilemap)
+
+                            if portal:
+                                second_last = portal
+
+                        vec = sub_vecs(second_last, tail)
+
                         area = TAIL[VEC_TO_DIRFLAG[normalize(vec)]]
                     else:
                         area = TAIL[W]

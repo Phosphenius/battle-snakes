@@ -42,9 +42,11 @@ def distance(vec1, vec2):
 
 
 def normalize(vec):
-    """Normalize vector. Note that this functions returns an int vector."""
+    """
+    Normalize vector. Note that this functions returns an int vector.
+    """
     length = hypot(vec[0], vec[1])
-    return (int(vec[0] // length), int(vec[1] // length))
+    return int(round(vec[0] / length)), int(round(vec[1] / length))
 
 
 def str_to_vec(data):
