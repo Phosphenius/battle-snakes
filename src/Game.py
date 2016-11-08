@@ -131,7 +131,7 @@ class BattleSnakesGame(object):
         self.graphics = GraphicsManager(self.screen)
         self.pwrup_manager = PowerupManager(self)
         self.shot_manager = ShotManager(self)
-        self.tilemap = Map(self, '../data/maps/map02.xml')
+        self.tilemap = Map(self, '../data/maps/map03.xml')
 
         self.spatialhash = defaultdict(list)
 

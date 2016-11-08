@@ -5,11 +5,12 @@ Snake AI powered by a Finite State Machine and Potential Fields.
 """
 
 from abc import abstractmethod
-from copy import copy
+from heapq import nsmallest
 
 from player import PlayerBase
 from fsm import State, FiniteStateMachine
-from utils import sub_vecs, m_distance
+from utils import m_distance, sub_vecs
+from astar import AStar
 
 
 class BotState(State):
@@ -30,56 +31,45 @@ class BotCollectState(BotState):
 
     """
     State class implementing the 'Collect State' in which the AI is attempting
-    to collect powerups. This is done by using Potential Fields which
-    attract the AI the particular powerup.
+    to collect powerups.
     """
 
     def __init__(self, bot):
         BotState.__init__(self, bot)
-
-        self.no_pwrups = True
-        self.pot_field = None
-        self.next_tile = self.bot.snake[0]
-        self.target_pwrup = None
-        self.map_width = self.bot.game.tilemap.width
-        self.map_height = self.bot.game.tilemap.height
-
-    def compute_pot_field(self):
-        """Compute potential field."""
-        # Get nearest powerup.
-        self.target_pwrup = copy(min([(m_distance(self.bot.snake[0],
-                                                  pwrup.pos), pwrup) for
-                                      pwrup in self.bot.game.
-                                      pwrup_manager.get_powerups()])[1])
-        # Add map potential and powerup potential together.
-        self.pot_field = (self.target_pwrup.pot_field +
-                          self.bot.game.tilemap.pot_field)
-
-        self.no_pwrups = False
-        # Fetch next tile from potential field
-        self.next_tile = self.pot_field.get_next(self.bot.snake[0])
+        self.prev_target = None
+        self.target = None
+        self.path = []
 
     def update(self, delta_time):
-        if self.target_pwrup and self.bot.snake[0] == self.target_pwrup.pos:
-            self.compute_pot_field()
+        self.prev_target = self.target
+        pwrup_table = []
+        for pwrup in self.bot.game.pwrup_manager.get_powerups():
+            dis = m_distance(self.bot.snake.body[0], pwrup.pos)
+            score = self.bot.pwrup_score[pwrup.pid]
 
-        if self.no_pwrups:
-            self.compute_pot_field()
+            pwrup_table.append((dis, score, pwrup))
 
-        new_heading = sub_vecs(self.next_tile, self.bot.snake[0])
-        self.bot.snake.set_heading(new_heading)
+        self.target = nsmallest(1, pwrup_table)[0][2].pos
 
-        if self.pot_field is not None:
+        if self.prev_target != self.target:
+            self.path = self.bot.pathfinder.find_path(
+                self.bot.snake.body[0],
+                self.target)
+            self.path.insert(0, self.target)
+            heading = sub_vecs(self.path[-1],
+                               self.bot.snake.body[0])
+            self.bot.snake.set_heading(heading)
 
-            if self.next_tile == self.bot.snake[0]:
-                # Print some stuff for debugging purposes.
-                print('Next tile: {0}\nSnake: {1}\nTarget: {2}\n'.format(
-                    self.next_tile, self.bot.snake[0], self.target_pwrup.pos))
+        if len(self.path) >= 1:
+            if self.path[-1] == self.bot.snake.body[0]:
+                self.path.pop()
 
-                self.next_tile = self.pot_field.get_next(self.bot.snake[0])
+                heading = sub_vecs(self.path[-1],
+                                   self.bot.snake.body[0])
+                self.bot.snake.set_heading(heading)
 
     def enter(self):
-        self.no_pwrups = (len(self.bot.game.pwrup_manager.get_powerups()) < 1)
+        pass
 
     def leave(self):
         pass
@@ -113,6 +103,25 @@ class Bot(PlayerBase, FiniteStateMachine):
     def __init__(self, game, config):
         PlayerBase.__init__(self, game, config)
         FiniteStateMachine.__init__(self, BotCollectState(self))
+
+        self.pathfinder = AStar(self.game.tilemap.width,
+                                self.game.tilemap.height,
+                                self.game.tilemap.tiles)
+        self.pwrup_target_weights = {'points': -0.1, 'grow': 0.1,
+                                     'speed': -0.05, 'boost': -0.00001,
+                                     'lifes': -100, 'hp': -0.8}
+        self.pwrup_score = {}
+
+        for pwrup in self.game.pwrup_manager.pwrup_prototypes.values():
+            pid = pwrup['pid']
+            self.pwrup_score[pid] = 0
+            targets = pwrup['actions']
+            num_targets = len(targets)
+
+            for target in targets:
+                weight = self.pwrup_target_weights[target['target']]
+                self.pwrup_score[pid] += target['value'] * weight
+            self.pwrup_score[pid] *= num_targets
 
     def update(self, delta_time):
         """Update fsm and player base."""

@@ -4,10 +4,10 @@ Powerup module.
 """
 
 from functools import partial
+import itertools
 import xml.dom.minidom as dom
 
 from utils import Timer
-from potentialfield import PotentialField
 
 
 class Powerup(object):
@@ -18,7 +18,6 @@ class Powerup(object):
 
     def __init__(self, game, pos, prototype):
         self.game = game
-        self.pot_field = None
         self.pos = pos
         self.elapsed_lifetime = 0
         self.elapsed_blink = 0
@@ -26,6 +25,7 @@ class Powerup(object):
         self.isvisible = True
         self.tex = prototype['tex']
         self.actions = prototype['actions']
+        self.pid = prototype['pid']
         self.lifetime = prototype.get('lifetime', 100000)
         self.blinkrate = prototype.get('blinkrate', 100000)
         self.startblinkingat = prototype.get('startblinkingat', 100000)
@@ -34,11 +34,11 @@ class Powerup(object):
 
     def reinit(self, pos, prototype):
         """Reinit powerup."""
-        self.pot_field = PotentialField.create(self.game.tilemap.width,
-                                               self.game.tilemap.height, pos)
+
         self.respawn(pos)
         self.tex = prototype['tex']
         self.actions = prototype['actions']
+        self.pid = prototype['pid']
         self.lifetime = prototype.get('lifetime', 100000)
         self.blinkrate = prototype.get('blinkrate', 100000)
         self.startblinkingat = prototype.get('startblinkingat', 100000)
@@ -51,8 +51,7 @@ class Powerup(object):
     def respawn(self, pos):
         """Respawn powerup."""
         self.pos = pos
-        self.pot_field = PotentialField.create(self.game.tilemap.width,
-                                               self.game.tilemap.height, pos)
+
         self.elapsed_lifetime = 0
         self.elapsed_blink = 0
         self.isalive = True
@@ -88,6 +87,7 @@ class PowerupManager(object):
         self.pwrup_pool = []
         self.pwrup_spawners = []
         self.pwrup_prototypes = {}
+        self.pid_counter = itertools.count()
 
         doc = dom.parse('../data/powerups.xml')
 
@@ -99,6 +99,8 @@ class PowerupManager(object):
                     p_node.getAttribute('tex')
                 self.pwrup_prototypes[name]['autorespawn'] = \
                     bool(p_node.getAttribute('autorespawn'))
+                self.pwrup_prototypes[name]['pid'] = \
+                    next(self.pid_counter)
 
                 attrs = ('lifetime', 'blinkrate', 'startblinkingat')
                 for attr in attrs:
