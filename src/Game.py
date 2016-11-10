@@ -123,7 +123,7 @@ class BattleSnakesGame(object):
         pygame.init()
         pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 
-        self.randomizer = random.Random(6)
+        self.randomizer = random.Random(11)
         self.sysfont = pygame.font.SysFont('Arial', 14)
         self.screen = pygame.display.set_mode(res)
         self.fps_clock = pygame.time.Clock()
@@ -131,7 +131,7 @@ class BattleSnakesGame(object):
         self.graphics = GraphicsManager(self.screen)
         self.pwrup_manager = PowerupManager(self)
         self.shot_manager = ShotManager(self)
-        self.tilemap = Map(self, '../data/maps/map03.xml')
+        self.tilemap = Map(self, '../data/maps/map02.xml')
 
         self.spatialhash = defaultdict(list)
 
