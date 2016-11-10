@@ -8,7 +8,6 @@ import os
 
 from utils import str_to_vec, str_to_vec_lst
 from snake import DIRECTIONS
-from potentialfield import PotentialField
 
 
 class Map(object):
