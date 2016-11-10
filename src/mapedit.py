@@ -137,9 +137,10 @@ class TileTool(object):
                     self.editor.cmd_manager.exec_cmd(cmd)
             self.point1 = self.editor.selected
 
-        if (self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and
-                self.editor.selected not in self.editor.tilemap.tiles
-                and not self.editor.input.key_pressed('SHIFT_L')):
+        if self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and \
+                self.editor.selected not in self.editor.tilemap.tiles \
+                and not self.editor.input.key_pressed('SHIFT_L') \
+                and not self.editor.input.key_pressed('CONTROL_L'):
 
             cmd = EditMapCommand(
                 [self.editor.selected],
