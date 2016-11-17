@@ -320,6 +320,7 @@ class InputManager(object):
         self.prev_key_state = []
         self.curr_button_state = []
         self.prev_button_state = []
+        self.motion_event_listener = None
 
     def capture_key_press(self, event):
         self.prev_key_state = copy(self.curr_key_state)
@@ -359,6 +360,9 @@ class InputManager(object):
     def mouse_motion(self, event):
         self.mouse_x = event.x
         self.mouse_y = event.y
+
+        if self.motion_event_listener:
+            self.motion_event_listener((self.mouse_x, self.mouse_y))
 
     def update(self):
         self.prev_key_state = []
@@ -540,7 +544,10 @@ class MapEditor(FiniteStateMachine):
         self.root.bind('<ButtonRelease>',
                        self.input.capture_button_release)
 
+        self.input.motion_event_listener = self.on_mouse_motion
+
         self.root.rowconfigure(0, weight=1)
+        self.root.rowconfigure(1)
         self.root.columnconfigure(0, weight=1)
 
         top = self.root.winfo_toplevel()
@@ -585,6 +592,9 @@ class MapEditor(FiniteStateMachine):
         self.embed = tk.Frame(self.root, width=1400, height=700)
         self.embed.grid(row=0, column=0)
 
+        self.label_tile_pos = tk.Label(self.root, text='pos: ')
+        self.label_tile_pos.grid(row=1, column=0, sticky=tk.NW)
+
         os.environ['SDL_WINDOWID'] = str(self.embed.winfo_id())
 
         self.root.update()
@@ -593,6 +603,14 @@ class MapEditor(FiniteStateMachine):
         self.screen = pygame.display.set_mode((DISPLAY_WIDTH,
                                                DISPLAY_HEIGHT))
         self.quit = False
+
+    def on_mouse_motion(self, pos):
+        left = COLS * CELL_SIZE
+        bot = ROWS * CELL_SIZE
+        xpos = pos[0] / CELL_SIZE if pos[0] < left else COLS-1
+        ypos = pos[1] / CELL_SIZE if pos[1] < bot else ROWS-1
+        msg_str = 'pos: {0}:{1}'.format(xpos, ypos)
+        self.label_tile_pos.config(text=msg_str)
 
     def file_new(self):
         self.change_state(EditState(self))
