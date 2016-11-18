@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 
 from heapq import heappush, heappop
+from collections import defaultdict
 
-from utils import add_vecs
+from utils import add_vecs, sub_vecs, get_adjacent
+
+
+WALL_PENALTY_MAX_SPREAD = 3
 
 
 class Node(object):
     def __init__(self, pos, blocked=False, penalty=0):
         self.pos = pos
-        self._gcost = penalty
+        self._gcost = 0
         self._hcost = 0
         self._fcost = self._gcost + self._hcost
+        self.penalty = penalty
         self.blocked = blocked
         self.parent = None
 
@@ -21,7 +26,7 @@ class Node(object):
         return self._gcost
 
     def set_gh(self, gcost, hcost):
-        self._gcost = gcost
+        self._gcost = gcost + self.penalty
         self._hcost = hcost
         self._fcost = self._gcost + self._hcost
 
@@ -49,7 +54,7 @@ class Pathfinder(object):
                 offset2 = add_vecs(portal2, tilemap.portals[portal1][1])
 
                 blocked = set(tilemap.portals.keys())
-                blocked -= set([portal1])
+                blocked -= {portal1}
 
                 path1 = self.astar.find_path(start_pos, portal1)
                 path2 = self.astar.find_path(offset2, dest_pos, blocked)
@@ -77,10 +82,30 @@ class AStar(object):
         self.nodes = [None] * self.cols
         self.nodes = [[None] * self.rows for _ in self.nodes]
 
+        penalty = defaultdict(int)
+
+        for tile in tilemap.tiles:
+            for adjacent in get_adjacent(tile, self.cols, self.rows):
+                if adjacent in self.blocked:
+                    continue
+
+                spread_dir = sub_vecs(adjacent, tile)
+                spread_count = 1
+                spread = add_vecs(tile, spread_dir)
+
+                while (spread not in tilemap.tiles
+                       and not tilemap.on_edge(spread)
+                       and spread_count < WALL_PENALTY_MAX_SPREAD):
+                    penalty[spread] += 12 / spread_count
+
+                    spread = add_vecs(spread, spread_dir)
+                    spread_count += 1
+
         for xpos in range(self.cols):
             for ypos in range(self.rows):
                 pos = (xpos, ypos)
-                self.nodes[xpos][ypos] = Node(pos, pos in self.blocked)
+                pen = penalty.get((xpos, ypos), 0)
+                self.nodes[xpos][ypos] = Node(pos, pos in self.blocked, pen)
 
     def find_path(self, start_pos, dest_pos, blocked=None):
         self.open_lst = list()
