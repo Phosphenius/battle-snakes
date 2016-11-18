@@ -2,6 +2,8 @@
 
 from heapq import heappush, heappop
 
+from utils import add_vecs
+
 
 class Node(object):
     def __init__(self, pos, blocked=False, penalty=0):
@@ -30,22 +32,46 @@ class Node(object):
         return self.pos == other.pos
 
 
+class Pathfinder(object):
+    """
+    """
+    def __init__(self, game):
+        self.game = game
+        self.astar = AStar(game.tilemap)
+
+    def find_path(self, start_pos, dest_pos):
+        tilemap = self.game.tilemap
+
+        for island in tilemap.islands:
+            if island.contains_target(start_pos, dest_pos):
+                portal1 = island.get_closest_portal(start_pos)
+                portal2 = tilemap.portals[portal1][0]
+                offset2 = add_vecs(portal2, tilemap.portals[portal1][1])
+
+                blocked = set(tilemap.portals.keys())
+                blocked -= set([portal1])
+
+                path1 = self.astar.find_path(start_pos, portal1)
+                path2 = self.astar.find_path(offset2, dest_pos, blocked)
+
+                path2.append(offset2)
+
+                return path2 + path1
+
+        blocked = set(tilemap.portals.keys())
+
+        return self.astar.find_path(start_pos, dest_pos, blocked)
+
+
 class AStar(object):
     """
     A* implementation, as simple as it gets.
     """
-    def __init__(self, tmap):
-        self.rows = tmap.height
-        self.cols = tmap.width
-        self.blocked = set(tmap.tiles)
-        self.tilemap = tmap
-        self.open_lst = list()
-        self.clsd_lst = set()
-        self.nodes = [None] * self.cols
-        self.nodes = [[None] * self.rows for _ in self.nodes]
-        self.reinit()
-
-    def reinit(self):
+    def __init__(self, tilemap):
+        self.rows = tilemap.height
+        self.cols = tilemap.width
+        self.blocked = set(tilemap.tiles)
+        self.tilemap = tilemap
         self.open_lst = list()
         self.clsd_lst = set()
         self.nodes = [None] * self.cols
@@ -56,8 +82,9 @@ class AStar(object):
                 pos = (xpos, ypos)
                 self.nodes[xpos][ypos] = Node(pos, pos in self.blocked)
 
-    def find_path(self, start_pos, dest_pos):
-        self.reinit()
+    def find_path(self, start_pos, dest_pos, blocked=None):
+        self.open_lst = list()
+        self.clsd_lst = set()
         path = []
         start_node = Node(start_pos)
         dest_node = Node(dest_pos)
@@ -77,13 +104,17 @@ class AStar(object):
 
                 return path
 
-            self.expand_node(curr_node, dest_node)
+            if blocked:
+                self.expand_node(curr_node, dest_node, blocked)
+            else:
+                self.expand_node(curr_node, dest_node, [])
 
         return None
 
-    def expand_node(self, curr_node, dest_node):
+    def expand_node(self, curr_node, dest_node, blocked):
         for adjacent in self.get_adjacent(curr_node):
-            if adjacent.blocked or adjacent in self.clsd_lst:
+            if (adjacent.blocked or adjacent in self.clsd_lst or
+                    adjacent.pos in blocked):
                 continue
 
             tentative_g = adjacent.get_gcost()
@@ -104,56 +135,23 @@ class AStar(object):
 
     def get_adjacent(self, node):
         xpos, ypos = node.pos
-        portals = self.tilemap.portals
 
         if xpos > 0:
-            new_xpos = xpos - 1
-            if (new_xpos, ypos) in portals:
-                node_x = portals[(new_xpos, ypos)][0][0] + \
-                         portals[(new_xpos, ypos)][1][0]
-                node_y = portals[(new_xpos, ypos)][0][1] + \
-                         portals[(new_xpos, ypos)][1][1]
-                yield self.nodes[node_x][node_y]
-            else:
-                yield self.nodes[new_xpos][ypos]
+            yield self.nodes[xpos - 1][ypos]
         else:
             yield self.nodes[self.cols-1][ypos]
 
         if ypos < self.rows - 1:
-            new_ypos = ypos + 1
-            if (xpos, new_ypos) in portals:
-                node_x = portals[(xpos, new_ypos)][0][0] + \
-                         portals[(xpos, new_ypos)][1][0]
-                node_y = portals[(xpos, new_ypos)][0][1] + \
-                         portals[(xpos, new_ypos)][1][1]
-                yield self.nodes[node_x][node_y]
-            else:
-                yield self.nodes[xpos][new_ypos]
+            yield self.nodes[xpos][ypos + 1]
         else:
             yield self.nodes[xpos][0]
 
         if xpos < self.cols - 1:
-            new_xpos = xpos + 1
-            if (new_xpos, ypos) in portals:
-                node_x = portals[(new_xpos, ypos)][0][0] + \
-                         portals[(new_xpos, ypos)][1][0]
-                node_y = portals[(new_xpos, ypos)][0][1] + \
-                         portals[(new_xpos, ypos)][1][1]
-                yield self.nodes[node_x][node_y]
-            else:
-                yield self.nodes[xpos + 1][ypos]
+            yield self.nodes[xpos + 1][ypos]
         else:
             yield self.nodes[0][ypos]
 
         if ypos > 0:
-            new_ypos = ypos - 1
-            if (xpos, new_ypos) in portals:
-                node_x = portals[(xpos, new_ypos)][0][0] + \
-                         portals[(xpos, new_ypos)][1][0]
-                node_y = portals[(xpos, new_ypos)][0][1] + \
-                         portals[(xpos, new_ypos)][1][1]
-                yield self.nodes[node_x][node_y]
-            else:
-                yield self.nodes[xpos][ypos - 1]
+            yield self.nodes[xpos][ypos - 1]
         else:
             yield self.nodes[xpos][self.rows-1]

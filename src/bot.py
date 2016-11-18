@@ -11,7 +11,7 @@ from copy import copy
 from player import PlayerBase
 from fsm import State, FiniteStateMachine
 from utils import m_distance, sub_vecs
-from astar import AStar
+from pathfinding import Pathfinder
 from snake import get_next_to_portal
 
 
@@ -127,7 +127,7 @@ class Bot(PlayerBase, FiniteStateMachine):
         PlayerBase.__init__(self, game, config)
         FiniteStateMachine.__init__(self, BotCollectState(self))
 
-        self.pathfinder = AStar(self.game.tilemap)
+        self.pathfinder = Pathfinder(self.game)
         self.pwrup_target_weights = {'points': -0.1, 'grow': 0.1,
                                      'speed': -0.05, 'boost': -0.00001,
                                      'lifes': -100, 'hp': -0.8}

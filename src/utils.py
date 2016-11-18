@@ -4,6 +4,13 @@
 from math import hypot
 
 
+def grid(cols, rows):
+    """Iterate over a grid"""
+    for col in range(cols):
+        for row in range(rows):
+            yield (col, row)
+
+
 def get_adjacent(pos, cols, rows):
     """Get adjacent tiles in a grid."""
     if pos[0] > 0:

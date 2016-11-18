@@ -5,9 +5,52 @@ Map module.
 
 import xml.dom.minidom as dom
 import os
+from heapq import nsmallest
 
-from utils import str_to_vec, str_to_vec_lst
+from utils import str_to_vec, str_to_vec_lst, get_adjacent, grid, \
+    m_distance
 from snake import DIRECTIONS
+
+
+def flood_fill(the_map, map_size, start_pos):
+    """
+    Slightly improved flood fill algorithm.
+    """
+    open_lst = set()
+    clsd_lst = set()
+    filled = set()
+
+    open_lst.add(start_pos)
+
+    while open_lst:
+        xpos, ypos = open_lst.pop()
+
+        if the_map[xpos][ypos]:
+            filled.add((xpos, ypos))
+            clsd_lst.add((xpos, ypos))
+
+            for adjacent in get_adjacent((xpos, ypos), map_size[0],
+                                         map_size[1]):
+                if adjacent not in clsd_lst:
+                    open_lst.add(adjacent)
+
+    return filled
+
+
+class MapAccessibilityNode(object):
+    def __init__(self, tiles, portals):
+        self.tiles = tiles
+        self.portals = portals
+
+    def get_closest_portal(self, pos):
+        ports = [(m_distance(pos, port), port) for port in self.portals]
+        return nsmallest(1, ports)[0][1]
+
+    def get_accessible(self):
+        return bool(self.portals)
+
+    def contains_target(self, pos, target):
+        return pos not in self.tiles and target in self.tiles
 
 
 class Map(object):
@@ -21,7 +64,11 @@ class Map(object):
         self.tiles = []
         self.spawnpoints = []
         self.portals = {}  # {p1:(p2, dir), p2:(p1, dir)}
+        self.islands = []
 
+        self.load_map(path)
+
+    def load_map(self, path):
         doc = dom.parse(path)
         maptag = doc.firstChild
 
@@ -46,16 +93,42 @@ class Map(object):
                                 point1 = \
                                     str_to_vec(p_node.firstChild.data)
                                 p1_dir = \
-                                    DIRECTIONS[p_node.getAttribute('dir')]
+                                    DIRECTIONS[
+                                        p_node.getAttribute('dir')]
                             elif p_node.nodeName == 'p2':
                                 point2 = \
                                     str_to_vec(p_node.firstChild.data)
                                 p2_dir = \
-                                    DIRECTIONS[p_node.getAttribute('dir')]
+                                    DIRECTIONS[
+                                        p_node.getAttribute('dir')]
                             if point1 is not None and point2 is not None:
                                 self.portals.update(
                                     {point1: (point2, p2_dir),
                                      point2: (point1, p1_dir)})
+
+        set_of_tiles = set(grid(self.width, self.height))
+        set_of_tiles -= set(self.tiles)
+
+        accessibility_map = [None] * self.width
+        accessibility_map = [[None] * self.height for _ in
+                             accessibility_map]
+
+        for xpos, ypos in grid(self.width, self.height):
+            accessibility_map[xpos][ypos] = (xpos, ypos) not in self.tiles
+
+        while set_of_tiles:
+            pos = set_of_tiles.pop()
+            tiles = flood_fill(accessibility_map,
+                               (self.width, self.height), pos)
+            portals = []
+
+            for portal in self.portals:
+                if self.portals[portal][0] in tiles and portal not in tiles:
+                    portals.append(portal)
+
+            self.islands.append(MapAccessibilityNode(tiles, portals))
+
+            set_of_tiles -= tiles
 
     def on_edge(self, pos):
         """Determines if pos is on the edge of the map."""

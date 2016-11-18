@@ -123,7 +123,7 @@ class BattleSnakesGame(object):
         pygame.init()
         pygame.display.set_caption("Battle Snakes {0}".format(VERSION))
 
-        self.randomizer = random.Random(11)
+        self.randomizer = random.Random(13)
         self.sysfont = pygame.font.SysFont('Arial', 14)
         self.screen = pygame.display.set_mode(res)
         self.fps_clock = pygame.time.Clock()
