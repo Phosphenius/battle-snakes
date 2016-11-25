@@ -137,10 +137,11 @@ class PowerupManager(object):
         for _ in range(times):
             for pwrup in self.pwrup_pool:
                 if not pwrup.isalive:
-                    pwrup.reinit(self.game.randpos(),
+                    pwrup.reinit(self.game.tilemap.randpos(),
                                  self.pwrup_prototypes[name])
                     return
-            self.pwrup_pool.append(Powerup(self.game, self.game.randpos(),
+            self.pwrup_pool.append(Powerup(self.game,
+                                           self.game.tilemap.randpos(),
                                            self.pwrup_prototypes[name]))
 
     def update(self, delta_time):
@@ -152,7 +153,7 @@ class PowerupManager(object):
             if pwrup.isalive:
                 pwrup.update(delta_time)
             elif pwrup.autorespawn:
-                pwrup.respawn(self.game.randpos())
+                pwrup.respawn(self.game.tilemap.randpos())
 
     def draw(self):
         """Draw powerups."""

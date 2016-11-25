@@ -17,7 +17,7 @@ class State(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def enter(self):
+    def enter(self, old_state):
         pass
 
     @abstractmethod
@@ -35,13 +35,16 @@ class FiniteStateMachine(object):
 
     def __init__(self, init_state=None):
         self.curr_state = init_state
-        self.curr_state.enter()
+        if init_state:
+            self.curr_state.enter(None)
 
     def change_state(self, new_state):
         """
         Transition to another state by calling the 'leave' method
         of the current state and the 'enter' method for the new state.
         """
-        self.curr_state.leave()
+        old_state = self.curr_state
+        if old_state:
+            old_state.leave()
         self.curr_state = new_state
-        self.curr_state.enter()
+        self.curr_state.enter(old_state)

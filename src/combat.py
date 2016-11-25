@@ -84,7 +84,7 @@ class Shot(object):
         if self.elapsed_t >= self.speed:
             self.elapsed_t -= self.speed
             self.pos = add_vecs(self.pos, self.heading)
-            self.pos = self.game.toroidal(self.pos)
+            self.pos = self.game.tilemap.wrap_around(self.pos)
 
         if self.elapsed_blink >= self.blinkrate:
             self.elapsed_blink -= self.blinkrate

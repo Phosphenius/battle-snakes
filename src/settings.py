@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """Settings."""
 
+from colors import RED, BLUE
+
+ID_TO_COLOR = {0: RED, 1: BLUE}
+
 INVINCIBILITY_BLINK_RATE = 0.1
 
 # Speed

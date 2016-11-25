@@ -387,7 +387,7 @@ class InitState(object):
     def __init__(self, state_context):
         self.context = state_context
 
-    def enter(self):
+    def enter(self, old_state):
         pass
 
     def leave(self):
@@ -445,7 +445,7 @@ class EditState(object):
             self.save_path = result
             self.tilemap.save(result)
 
-    def enter(self):
+    def enter(self, old_state):
         """Enter edit state and change the file menu accordingly."""
         self.context.file_menu.entryconfig(3, state=tk.NORMAL,
                                            command=self.file_save)

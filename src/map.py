@@ -123,17 +123,50 @@ class Map(object):
             portals = []
 
             for portal in self.portals:
-                if self.portals[portal][0] in tiles and portal not in tiles:
+                if (self.portals[portal][0] in tiles and
+                            portal not in tiles):
                     portals.append(portal)
 
             self.islands.append(MapAccessibilityNode(tiles, portals))
 
             set_of_tiles -= tiles
 
+    def wrap_around(self, obj):
+        """Wrap obj around the map."""
+        xpos, ypos = obj
+        if xpos < 0:
+            obj = (self.width-1, ypos)
+        if xpos > self.width-1:
+            obj = (0, ypos)
+        if ypos < 0:
+            obj = (xpos, self.height-1)
+        if ypos > self.height-1:
+            obj = (xpos, 0)
+        return obj
+
+    def get_spawnpoint(self):
+        """Return  random, unblocked spawnpoint."""
+        return self.game.randomizer.choice([spawnpoint for spawnpoint in
+                                       self.spawnpoints
+                                       if self.sp_unblocked(spawnpoint)])
+
+    def sp_unblocked(self, spawnpoint):
+        """Determine if a spawnpoint is blocked."""
+        return len(self.game.curr_state.mode.spatialhash[spawnpoint]) == 1
+
     def on_edge(self, pos):
         """Determines if pos is on the edge of the map."""
         return pos[0] == 0 or pos[0] == self.width-1 or \
             pos[1] == 0 or pos[1] == self.height-1
+
+    def randpos(self):
+        """Return random position."""
+        while True:
+            pos = (self.game.randomizer.randint(1, self.width-1),
+                   self.game.randomizer.randint(1, self.height-1))
+            if (pos not in self.game.curr_state.mode.spatialhash and
+                        pos not in self.tiles):
+                return pos
 
     def draw(self):
         """Draw map."""

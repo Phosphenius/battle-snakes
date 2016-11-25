@@ -305,7 +305,7 @@ class Snake(object):
         if not self.ismoving:
             return
 
-        self.body[0] = self.game.toroidal(self.body[0])
+        self.body[0] = self.game.tilemap.wrap_around(self.body[0])
         # Move Snake
         if self.elapsed_t >= 1. / (self._speed + self._speed_bonus):
             self.prev = self.body[:]
@@ -329,9 +329,9 @@ class Snake(object):
         if self.isvisible:
             body_len = len(self.body)
             area = None
-            tilemap = self.game.tilemap
+            tilemap = self.game.curr_state.mode.tilemap
 
-            # Needs refactoring, indentation is way too deep...
+            # TODO: Needs refactoring, indentation is way too deep...
             for index, part in enumerate(self.body):
                 if index == 0:
                     if self.heading and self.heading != (0, 0):

@@ -40,12 +40,13 @@ class PlayerBase(object):
     Player base class.
     """
 
-    def __init__(self, game, config):
+    def __init__(self, game, tilemap, config):
         self.game = game
+        self.tilemap = tilemap
         self.pid = config['id']
         self.color = config['color']
-        self.snake = Snake(game, game.get_spawnpoint(),
-                           config['skin'], self.pid, self.snake_killed)
+        self.snake_skin = config['skin']
+        self.snake = None
         self._lifes = INIT_LIFES
         self.points = 0
         self._boost = INIT_BOOST
@@ -58,6 +59,10 @@ class PlayerBase(object):
         self.pwrup_targets = {'points': 'points', 'grow': 'snake.grow',
                               'speed': 'snake.speed', 'boost': 'boost',
                               'lifes': 'lifes', 'hp': 'snake.hitpoints'}
+
+    def start(self):
+        self.snake = Snake(self.game, self.tilemap.get_spawnpoint(),
+                           self.snake_skin, self.pid, self.snake_killed)
 
     @property
     def lifes(self):
@@ -128,6 +133,9 @@ class PlayerBase(object):
 
     def update(self, delta_time):
         """Update player, move snake."""
+        if not self.snake:
+            return
+
         self.snake.update(delta_time)
 
         self.weapons[0].update(delta_time)
@@ -150,13 +158,20 @@ class PlayerBase(object):
 
     def draw(self, offset):
         """Draw snake and UI."""
+        if not self.snake:
+            return
+
         self.snake.draw()
-        self.game.draw_string('Player{0}'.format(self.pid),
-                              add_vecs((2, 2), offset), self.color)
-        self.game.draw_string('{0:.2f}'.format(self.snake.speed),
-                              add_vecs((56, 2), offset), WHITE)
-        self.game.draw_string('Points: {0}'.format(self.points),
-                              add_vecs((2, 18), offset), WHITE)
+
+        self.game.graphics.draw_string(add_vecs((2, 2), offset),
+                                       'Player{0}'.format(self.pid),
+                                        self.color)
+        self.game.graphics.draw_string(add_vecs((56, 2), offset),
+                                       '{0:.2f}'.format(self.snake.speed),
+                                        WHITE)
+        self.game.graphics.draw_string(add_vecs((2, 18), offset),
+                                       'Points: {0}'.format(self.points),
+                                        WHITE)
 
         pygame.draw.rect(self.game.screen, ORANGE,
                          pygame.Rect(add_vecs((100, 2), offset), (104, 20)))
@@ -170,9 +185,9 @@ class PlayerBase(object):
                          pygame.Rect(add_vecs((102, 13), offset), (int(
                              self.boost / float(MAX_BOOST) * 100), 7)))
 
-        self.game.draw_string('{0} {1}'.format(self.weapons[0].wtype,
-                                               self.weapons[0].ammo),
-                              add_vecs((208, 2), offset), WHITE)
+        self.game.graphics.draw_string(add_vecs((208, 2), offset),
+                                       '{0} {1}'.format(self.weapons[0].wtype,
+                                               self.weapons[0].ammo), WHITE)
 
         for i in range(self.lifes):
             self.game.graphics.draw('life16x16', add_vecs((100, 24), offset),
@@ -192,8 +207,8 @@ class Player(PlayerBase):
     Player class.
     """
 
-    def __init__(self, game, config):
-        PlayerBase.__init__(self, game, config)
+    def __init__(self, game, tilemap, config):
+        PlayerBase.__init__(self, game, tilemap, config)
 
         self.game.key_manager.key_down_event.append(self.key_down)
         self.game.key_manager.key_up_event.append(self.key_up)

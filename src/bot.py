@@ -87,7 +87,7 @@ class BotCollectState(BotState):
             self.path.pop()
             self.bot.snake.set_heading(heading)
 
-    def enter(self):
+    def enter(self, old_state):
         pass
 
     def leave(self):
@@ -110,7 +110,7 @@ class BotAttackState(BotState):
     def update(self, delta_time):
         pass
 
-    def enter(self):
+    def enter(self, old_state):
         pass
 
     def leave(self):
