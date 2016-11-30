@@ -12,11 +12,9 @@ from modes import ClassicSnakeGameMode
 
 
 SP_GAME_MODES_DESC = {0: 'This is the classic Snake mode',
-                      1: '''Free for all mode.
-Fight against bots, collect powerups and food.''',
-                      2: '''Collect as much food as possible before
+                      1: '''Collect as much food as possible before
 time runs out!''',
-                      3: 'Return to main menu'}
+                      2: 'Return to main menu'}
 
 
 class GameStateScreen(State):
@@ -182,10 +180,7 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
         btn_classic = Button(game,
                              text='Classic Snake',
                              action=self.entry_cl_action,
-                             enabled=False)
-        btn_ffa = Button(game,
-                         text='Free for all',
-                         action=self.entry_ffa_action)
+                             enabled=True)
         btn_timelimit = Button(game,
                                text='Time limit',
                                action=self.entry_tl_action,
@@ -195,7 +190,6 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
                           action=self.entry_bk_action)
 
         self.stackpanel.add_widgets(btn_classic,
-                                    btn_ffa,
                                     btn_timelimit,
                                     btn_back)
 
@@ -214,9 +208,6 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
         self.textbox.set_text(txt)
 
     def entry_cl_action(self):
-        pass
-
-    def entry_ffa_action(self):
         state = SelectPlayerScreen(self.game, 1)
         self.game.curr_state.change_state(state)
 
