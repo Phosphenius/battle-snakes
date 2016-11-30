@@ -14,7 +14,7 @@ from pygame.locals import QUIT, K_q, K_ESCAPE
 
 from gsm import MenuState
 from fsm import FiniteStateMachine
-from colors import WHITE, BLACK, RED, BLUE
+from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
 from settings import PANEL_H, CELL_SIZE, SCR_W, SCR_H
 from combat import ShotManager

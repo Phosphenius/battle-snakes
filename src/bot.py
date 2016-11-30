@@ -123,8 +123,8 @@ class Bot(PlayerBase, FiniteStateMachine):
     Basic bot class.
     """
 
-    def __init__(self, game, config):
-        PlayerBase.__init__(self, game, config)
+    def __init__(self, g_mode, config):
+        PlayerBase.__init__(self, g_mode, config)
         FiniteStateMachine.__init__(self, BotCollectState(self))
 
         self.pathfinder = Pathfinder(self.game)

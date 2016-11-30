@@ -6,8 +6,6 @@ Player module.
 from collections import deque
 
 import pygame
-from pygame.locals import (K_LEFT, K_RIGHT, K_UP, K_DOWN, K_l, K_k, K_j,
-                           K_a, K_d, K_w, K_s, K_c, K_v, K_b)
 
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
@@ -17,22 +15,6 @@ from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
                       BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
 
-# -- Controls --
-CTRLS1 = {'left': K_LEFT, 'right': K_RIGHT, 'up': K_UP, 'down': K_DOWN,
-          'action': K_l, 'boost': K_k, 'nextweapon': K_j}
-
-CTRLS2 = {'left': K_a, 'right': K_d, 'up': K_w, 'down': K_s, 'action': K_c,
-          'boost': K_v, 'nextweapon': K_b}
-
-# -- Players --
-PLAYER1 = {'id': '1', 'color': BLUE, 'ctrls': CTRLS1,
-           'skin': 'skin01'}
-
-PLAYER2 = {'id': '2', 'color': RED, 'ctrls': CTRLS2,
-           'skin': 'skin01'}
-
-BOT = {'id': 2, 'color': RED, 'skin': 'skin01'}
-
 
 class PlayerBase(object):
 
@@ -40,9 +22,9 @@ class PlayerBase(object):
     Player base class.
     """
 
-    def __init__(self, game, tilemap, config):
-        self.game = game
-        self.tilemap = tilemap
+    def __init__(self, g_mode, config):
+        self.game = g_mode.game
+        self.tilemap = g_mode.tilemap
         self.pid = config['id']
         self.color = config['color']
         self.snake_skin = config['skin']
@@ -163,42 +145,44 @@ class PlayerBase(object):
 
         self.snake.draw()
 
-        self.game.graphics.draw_string(add_vecs((2, 2), offset),
-                                       'Player{0}'.format(self.pid),
-                                        self.color)
-        self.game.graphics.draw_string(add_vecs((56, 2), offset),
-                                       '{0:.2f}'.format(self.snake.speed),
-                                        WHITE)
-        self.game.graphics.draw_string(add_vecs((2, 18), offset),
-                                       'Points: {0}'.format(self.points),
-                                        WHITE)
+        gfx = self.game.graphics
+
+        gfx.draw_string(add_vecs((2, 2), offset),
+                        'Player{0}'.format(self.pid), self.color)
+
+        gfx.draw_string(add_vecs((56, 2), offset),
+                        '{0:.2f}'.format(self.snake.speed), WHITE)
+
+        gfx.draw_string(add_vecs((2, 18), offset),
+                        'Points: {0}'.format(self.points), WHITE)
 
         pygame.draw.rect(self.game.screen, ORANGE,
-                         pygame.Rect(add_vecs((100, 2), offset), (104, 20)))
+                         pygame.Rect(add_vecs((100, 2), offset),
+                                     (104, 20)))
 
-        pygame.draw.rect(self.game.screen, RED,
-                         pygame.Rect(add_vecs((102, 4), offset), (int(
-                             self.snake.hitpoints /
-                             float(MAX_HITPOINTS) * 100), 7)))
+        # Draw life bar. TODO: Make this some kinda class.
+        width = int(self.snake.hitpoints / float(MAX_HITPOINTS) * 100)
+        rect = pygame.Rect(add_vecs((102, 4), offset), (width, 7))
+        pygame.draw.rect(self.game.screen, RED, rect)
 
-        pygame.draw.rect(self.game.screen, BLUE,
-                         pygame.Rect(add_vecs((102, 13), offset), (int(
-                             self.boost / float(MAX_BOOST) * 100), 7)))
+        width = int(self.boost / float(MAX_BOOST) * 100)
+        rect = pygame.Rect(add_vecs((102, 13), offset), (width, 7))
+        pygame.draw.rect(self.game.screen, BLUE, rect)
 
-        self.game.graphics.draw_string(add_vecs((208, 2), offset),
-                                       '{0} {1}'.format(self.weapons[0].wtype,
-                                               self.weapons[0].ammo), WHITE)
+        gfx.draw_string(add_vecs((208, 2), offset),
+                        '{0} {1}'.format(self.weapons[0].wtype,
+                                         self.weapons[0].ammo), WHITE)
 
-        for i in range(self.lifes):
-            self.game.graphics.draw('life16x16', add_vecs((100, 24), offset),
-                                    gridcoords=False, offset=(i*18, 0))
+        for index in range(self.lifes):
+            gfx.draw('life16x16', add_vecs((100, 24), offset),
+                     gridcoords=False, offset=(index*18, 0))
 
     def snake_killed(self, killed_by):
         """Snake killed event handler."""
         if self.lifes > 0:
             self.lifes -= 1
             self.boost = MAX_BOOST
-            self.snake.respawn(self.game.get_spawnpoint())
+            self.snake.respawn(self.tilemap.get_spawnpoint())
 
 
 class Player(PlayerBase):
@@ -207,8 +191,8 @@ class Player(PlayerBase):
     Player class.
     """
 
-    def __init__(self, game, tilemap, config):
-        PlayerBase.__init__(self, game, tilemap, config)
+    def __init__(self, g_mode, config):
+        PlayerBase.__init__(self, g_mode, config)
 
         self.game.key_manager.key_down_event.append(self.key_down)
         self.game.key_manager.key_up_event.append(self.key_up)

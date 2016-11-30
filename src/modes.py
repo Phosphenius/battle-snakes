@@ -24,7 +24,7 @@ class GameModeBase(object):
 
         # TODO: To this for bots too.
         for player_data in config['players']:
-            player = Player(game, self.tilemap, player_data)
+            player = Player(self, player_data)
             self.players.append(player)
 
     def start(self):

@@ -64,45 +64,45 @@ def get_arrangement(snake, index, tilemap):
     This is to determine which part of the skin texture to use for
     rendering said part.
     """
-    ax, ay = a = snake[index - 1]
-    bx, by = b = snake[index]
-    cx, cy = c = snake[index + 1]
+    vec_ax, vec_ay = vec_a = snake[index - 1]
+    vec_bx, vec_by = vec_b = snake[index]
+    vec_cx, vec_cy = vec_c = snake[index + 1]
 
-    ba = sub_vecs(a, b)
-    bc = sub_vecs(c, b)
+    vec_ba = sub_vecs(vec_a, vec_b)
+    vec_bc = sub_vecs(vec_c, vec_b)
 
-    ba_apart = m_distance(a, b) > 1
-    bc_apart = m_distance(c, b) > 1
+    ba_apart = m_distance(vec_a, vec_b) > 1
+    bc_apart = m_distance(vec_c, vec_b) > 1
 
-    a_on_edge = tilemap.on_edge(a)
+    a_on_edge = tilemap.on_edge(vec_a)
 
     if ba_apart:
         if a_on_edge:
-            ba = normalize(ba)
+            vec_ba = normalize(vec_ba)
 
-        portal = get_next_to_portal(b, tilemap)
+        portal = get_next_to_portal(vec_b, tilemap)
         if portal:
-            a = portal
-            ax, ay = a
-            ba = sub_vecs(a, b)
+            vec_a = portal
+            vec_ax, vec_ay = vec_a
+            vec_ba = sub_vecs(vec_a, vec_b)
 
     if bc_apart:
         if a_on_edge:
-            bc = normalize((-bc[0], -bc[1]))
+            vec_bc = normalize((-vec_bc[0], -vec_bc[1]))
 
-        portal = get_next_to_portal(b, tilemap)
+        portal = get_next_to_portal(vec_b, tilemap)
 
         if portal:
-            c = portal
-            cx, cy = c
-            bc = sub_vecs(c, b)
+            vec_c = portal
+            vec_cx, vec_cy = vec_c
+            vec_bc = sub_vecs(vec_c, vec_b)
 
-    if ax == bx == cx:
+    if vec_ax == vec_bx == vec_cx:
         return VERTICAL | STRAIGHT
-    elif ay == by == cy:
+    elif vec_ay == vec_by == vec_cy:
         return STRAIGHT
     else:
-        return VEC_TO_DIRFLAG[ba] | VEC_TO_DIRFLAG[bc]
+        return VEC_TO_DIRFLAG[vec_ba] | VEC_TO_DIRFLAG[vec_bc]
 
 
 class SnakeNormalState(object):
