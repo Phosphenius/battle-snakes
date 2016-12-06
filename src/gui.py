@@ -389,12 +389,12 @@ class TextDisplay(WidgetBase):
 
 
 class SnakeAvatar(WidgetBase):
-    def __init__(self, game, **kwargs):
+    def __init__(self, game, skin, **kwargs):
         WidgetBase.__init__(self, game, **kwargs)
 
         self.focus_enabled = False
         self.height = 50
-        self.skin = 'skin01'
+        self.skin = skin
 
         self.fake_snake = (((00, 00), pygame.Rect(00, 10, 10, 10)),
                            ((10, 00), pygame.Rect(30, 30, 10, 10)),
@@ -431,7 +431,6 @@ class PlayerSlot(object):
         self._player = False
         self._ready = False
 
-        self.snake_av = SnakeAvatar(game)
 
         # TODO: Color this according to player id
         self.lab_playerid = label(game, text='<open>',
@@ -441,11 +440,22 @@ class PlayerSlot(object):
 
         self.lab_skin = label(game, text='Skin:', height=30,
                               big_text=False)
-        skins = self.game.graphics.get_startswith('skin')
+
+        self.skin_full_names = {}
+        skins = []
+
+        for skin in self.game.graphics.get_startswith('skin'):
+            shortened = skin[5:]
+            self.skin_full_names[shortened] = skin
+            skins.append(shortened)
+
         self.cyc_skin = CycleButton(game, height=30, big_text=False,
                                     elements=skins,
                                     action=self.cyc_skin_action,
                                     action_keys=(None, None))
+
+        init_skin = self.skin_full_names[self.cyc_skin.elements[0]]
+        self.snake_av = SnakeAvatar(game, init_skin)
 
         self.stack_panel.add_widgets(self.lab_playerid, self.snake_av,
                                      self.lab_skin, self.cyc_skin)
@@ -495,7 +505,8 @@ class PlayerSlot(object):
     def player(self, player):
         self._player = player
 
-        self._player['skin'] = self.cyc_skin.elements[0]
+        skin = self.skin_full_names[self.cyc_skin.elements[0]]
+        self._player['skin'] = skin
 
         self.stack_panel.action_keys = (player['ctrls']['up'],
                                         player['ctrls']['down'])
@@ -513,8 +524,8 @@ class PlayerSlot(object):
         self.stack_panel.change_focus(3)
 
     def cyc_skin_action(self, new_val):
-        self.snake_av.skin = new_val
-        self._player['skin'] = new_val
+        self.snake_av.skin = self.skin_full_names[new_val]
+        self._player['skin'] = self.skin_full_names[new_val]
 
     def update(self, delta_time):
         self.stack_panel.update(delta_time)

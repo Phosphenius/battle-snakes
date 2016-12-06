@@ -2,6 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
+"""
+Script for packing and unpacking skin textures
+"""
+
+
 import argparse
 
 from pygame import image, Surface, Rect, transform
@@ -51,7 +56,9 @@ def main():
                 pos = add_vecs(tile.topleft, offset)
                 dst_img.blit(transform.rotate(single_tile, rot), pos)
 
-        for tile, tile_pos in ((STRAIGHT1, (0, 10)), (STRAIGHT2, (0, 20))):
+        for tile, tile_pos in ((STRAIGHT1, (0, 10)),
+                               (STRAIGHT2, (0, 20))):
+            single_tile.fill((0, 0 , 0 , 0))
             single_tile.blit(src_img, (0, 0), Rect(tile_pos, (10, 10)))
 
             dst_img.blit(single_tile, tile)
