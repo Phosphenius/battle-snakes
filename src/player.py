@@ -10,8 +10,8 @@ import pygame
 from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, LEFT, RIGHT, UP, DOWN
 from utils import add_vecs
-from combat import Weapon, STD_MG, H_GUN, PLASMA_GUN, BOMB1_DROPPER
-from settings import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
+from combat import Weapon, DUMMY
+from constants import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
                       BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
 
@@ -22,29 +22,31 @@ class PlayerBase(object):
     Player base class.
     """
 
-    def __init__(self, g_mode, config):
-        self.game = g_mode.game
-        self.tilemap = g_mode.tilemap
-        self.pid = config['id']
-        self.color = config['color']
-        self.snake_skin = config['skin']
+    def __init__(self, game_mode, dead_handler, **kwargs):
+        self.game = game_mode.game
+        self.tilemap = game_mode.tilemap
+        self.pid = kwargs['id']
+        self.color = kwargs['color']
+        self.snake_skin = kwargs['skin']
         self.snake = None
-        self._lifes = INIT_LIFES
+        self.snake_config = kwargs.get('snake_config', {})
+        self._lifes = kwargs.get('lifes', INIT_LIFES)
         self.points = 0
+        self.boost_enabled = kwargs.get('boost_enabled', True)
         self._boost = INIT_BOOST
         self.boosting = False
-        self.weapons = deque((
-            Weapon(self.game, self, STD_MG),
-            Weapon(self.game, self, H_GUN),
-            Weapon(self.game, self, PLASMA_GUN),
-            Weapon(self.game, self, BOMB1_DROPPER)))
+        self.dead_handler = dead_handler
+        # TODO: Add weapons from kwargs
+        self.weapons = deque(maxlen=5)
+        self.weapons.append(Weapon(game_mode.game, self, DUMMY))
         self.pwrup_targets = {'points': 'points', 'grow': 'snake.grow',
                               'speed': 'snake.speed', 'boost': 'boost',
                               'lifes': 'lifes', 'hp': 'snake.hitpoints'}
 
     def start(self):
         self.snake = Snake(self.game, self.tilemap.get_spawnpoint(),
-                           self.snake_skin, self.pid, self.snake_killed)
+                           self.snake_skin, self.pid,
+                           self.snake_killed, self.snake_config)
 
     @property
     def lifes(self):
@@ -165,9 +167,10 @@ class PlayerBase(object):
         rect = pygame.Rect(add_vecs((102, 4), offset), (width, 7))
         pygame.draw.rect(self.game.screen, RED, rect)
 
-        width = int(self.boost / float(MAX_BOOST) * 100)
-        rect = pygame.Rect(add_vecs((102, 13), offset), (width, 7))
-        pygame.draw.rect(self.game.screen, BLUE, rect)
+        if self.boost_enabled:
+            width = int(self.boost / float(MAX_BOOST) * 100)
+            rect = pygame.Rect(add_vecs((102, 13), offset), (width, 7))
+            pygame.draw.rect(self.game.screen, BLUE, rect)
 
         gfx.draw_string(add_vecs((208, 2), offset),
                         '{0} {1}'.format(self.weapons[0].wtype,
@@ -183,6 +186,8 @@ class PlayerBase(object):
             self.lifes -= 1
             self.boost = MAX_BOOST
             self.snake.respawn(self.tilemap.get_spawnpoint())
+        else:
+            self.dead_handler()
 
 
 class Player(PlayerBase):
@@ -191,20 +196,20 @@ class Player(PlayerBase):
     Player class.
     """
 
-    def __init__(self, g_mode, config):
-        PlayerBase.__init__(self, g_mode, config)
+    def __init__(self, game_mode, dead_handler, kwargs):
+        PlayerBase.__init__(self, game_mode, dead_handler, **kwargs)
 
         self.game.key_manager.key_down_event.append(self.key_down)
         self.game.key_manager.key_up_event.append(self.key_up)
-        self.ctrls = config['ctrls']
+        self.ctrls = kwargs['ctrls']
 
     def key_down(self, key):
         """Key down event handler."""
-        if key == self.ctrls['boost']:
+        if key == self.ctrls['boost'] and self.boost_enabled:
             self.boosting = True
             self.snake.speed_bonus = BOOST_SPEED
         elif key == self.ctrls['action']:
-            # Has the potential to cause an endless loop.
+            # FIXME: Has the potential to cause an endless loop.
             while self.weapons[0].ammo <= 0:
                 self.weapons.rotate(1)
             self.weapons[0].set_firing(True)
@@ -236,7 +241,7 @@ class Player(PlayerBase):
             self.snake.set_heading(RIGHT)
 
         if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
-            # Dangerous...
+            # FIXME: Dangerous...
             self.weapons.rotate(1)
             while self.weapons[0].ammo <= 0:
                 self.weapons.rotate(1)

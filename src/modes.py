@@ -6,10 +6,11 @@ from collections import defaultdict
 
 from powerup import PowerupManager
 from map import Map
-from settings import (SPAWNPOINT_TAG, WALL_TAG, PWRUP_TAG, SHOT_TAG,
+from constants import (SPAWNPOINT_TAG, WALL_TAG, PWRUP_TAG, SHOT_TAG,
                       PORTAL_TAG, SCR_W, PANEL_H)
 from utils import mul_vec, add_vecs
 from player import Player
+import gsm
 
 
 class GameModeBase(object):
@@ -19,13 +20,29 @@ class GameModeBase(object):
         self.pwrup_manager = PowerupManager(game)
         self.spatialhash = defaultdict(list)
         self.players = list()
+        self.config = config
+        self.num_dead_players = 0
 
+        self.reinit()
+
+    def reinit(self):
+        self.pwrup_manager.clear()
+        self.players = list()
+        self.num_dead_players = 0
         self.build_sh()
 
-        # TODO: To this for bots too.
-        for player_data in config['players']:
-            player = Player(self, player_data)
+        # TODO: Do this for bots too.
+        for player_data in self.config['players']:
+            player = Player(self, self.player_dead, player_data)
             self.players.append(player)
+
+    def player_dead(self):
+        self.num_dead_players += 1
+
+        if self.num_dead_players >= len(self.players):
+            screen = gsm.GameOverScreen(self.game, self)
+            self.game.curr_state.change_state(screen)
+
 
     def start(self):
         for player in self.players:
@@ -113,11 +130,18 @@ class GameModeBase(object):
 class ClassicSnakeGameMode(GameModeBase):
     def __init__(self, game, config):
         config['map'] = '../data/maps/classic_snake.xml'
+
+        for player in config['players']:
+            player['snake_config'] = {}
+            player['snake_config']['hp'] = 1
+            player['boost_enabled'] = False
+            player['lifes'] = 0
+
         GameModeBase.__init__(self, game, config)
 
     def start(self):
         GameModeBase.start(self)
-        self.pwrup_manager.spawn_pwrup('food1', 1)
+        self.pwrup_manager.spawn_pwrup('classic snake food', 1)
 
     def update(self, delta_time):
         GameModeBase.update(self, delta_time)

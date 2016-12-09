@@ -5,8 +5,9 @@ Snake module.
 
 from pygame import Rect
 
-from settings import (INVINCIBILITY_BLINK_RATE, MAX_HITPOINTS,
+from constants import (MAX_HITPOINTS,
                       INIT_SPEED, MIN_SPEED, MAX_SPEED)
+from constants import INVINCIBILITY_BLINK_RATE
 from utils import add_vecs, sub_vecs, normalize, m_distance
 
 # -- Directions --
@@ -158,15 +159,15 @@ class Snake(object):
     Represents a snake.
     """
 
-    def __init__(self, game, pos, skin, _id, killed_handler):
+    def __init__(self, game, pos, skin, _id, killed_handler, config):
         self.game = game
         self.body_tag = '#p{0}-body'.format(_id)
         self.head_tag = '#p{0}-head'.format(_id)
         self.skin = skin
         self.body = [pos, (pos[0] + 1, pos[1])]
         self.heading = None
-        self._hitpoints = MAX_HITPOINTS
-        self._speed = INIT_SPEED
+        self._hitpoints = config.get('hp', MAX_HITPOINTS)
+        self._speed = config.get('speed', INIT_SPEED)
         self._speed_bonus = 0
         self.elapsed_t = 0.
         self.grow = 0

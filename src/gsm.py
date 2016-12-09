@@ -6,8 +6,8 @@ from itertools import count
 from fsm import State, FiniteStateMachine
 from gui import (Button, label, StackPanel, TextDisplay,
                  StandaloneContainer, PlayerSlot)
-from settings import SCR_W, ID_TO_COLOR
-from colors import WHITE, DARK_GREEN
+from constants import SCR_W
+from colors import WHITE, DARK_GREEN, RED, BLUE
 from modes import ClassicSnakeGameMode
 
 
@@ -15,6 +15,8 @@ SP_GAME_MODES_DESC = {0: 'This is the classic Snake mode',
                       1: '''Collect as much food as possible before
 time runs out!''',
                       2: 'Return to main menu'}
+
+ID_TO_COLOR = {0: RED, 1: BLUE}
 
 
 class GameStateScreen(State):
@@ -50,6 +52,56 @@ class InGameState(GameStateScreen, FiniteStateMachine):
 
     def draw(self):
         self.curr_state.draw()
+
+
+class GameOverScreen(GameStateScreen):
+    def __init__(self, game, mode):
+        GameStateScreen.__init__(self, game)
+        self.mode = mode
+        self.stack_panel = StackPanel(game, (515, 400), 250)
+
+        btn_again = Button(game, text='Play again',
+                           action=self.btn_again_action)
+        btn_menu = Button(game, text='Return to main menu',
+                          action=self.btn_menu_action)
+        btn_quit = Button(game, text='Quit',
+                          action=self.btn_quit_action)
+
+        self.stack_panel.add_widgets(btn_again, btn_menu, btn_quit)
+
+    def btn_again_action(self):
+        self.mode.reinit()
+        screen = CountdownScreen(self.game, self.mode)
+        self.game.curr_state.change_state(screen)
+
+    def btn_menu_action(self):
+        self.game.change_state(MenuState(self.game))
+
+    def btn_quit_action(self):
+        self.game.curr_state.change_state(QuitScreen(self.game))
+
+    def update(self, delta_time):
+        self.stack_panel.update(delta_time)
+
+    def draw(self):
+        self.stack_panel.draw()
+
+        self.game.graphics.draw_string((600, 250), 'Game Over!',
+                                       WHITE, big=True)
+
+
+class GamePausedScreen(GameStateScreen):
+    def __init__(self, game, mode):
+        GameStateScreen.__init__(self, game)
+        self.mode = mode
+
+        self.stack_panel = StackPanel(game, (0, 0), 250)
+
+    def update(self, delta_time):
+        pass
+
+    def draw(self):
+        self.mode.draw()
 
 
 class PlayingState(GameStateScreen):
@@ -109,21 +161,21 @@ class MainMenuScreen(GameStateScreen):
 
         btn_single_player = Button(game,
                                    text='Single Player',
-                                   action=self.entry_sp_action)
+                                   action=self.btn_sp_action)
         btn_multiplayer = Button(game,
                                  text='Multiplayer',
-                                 action=self.entry_mp_action,
+                                 action=self.btn_mp_action,
                                  enabled=False)
         btn_settings = Button(game,
                               text='Settings',
-                              action=self.entry_st_action,
+                              action=self.btn_st_action,
                               enabled=False)
         btn_credits = Button(game,
                              text='Credits',
-                             action=self.entry_cr_action)
+                             action=self.btn_cr_action)
         btn_quit = Button(game,
                           text='Quit',
-                          action=self.entry_qt_action)
+                          action=self.btn_qt_action)
 
         self.stackpanel.add_widgets(btn_single_player,
                                     btn_multiplayer,
@@ -139,20 +191,20 @@ class MainMenuScreen(GameStateScreen):
                                              300,
                                              textbox)
 
-    def entry_sp_action(self):
+    def btn_sp_action(self):
         new_state = SinglePlayerSelectModeScreen(self.game)
         self.game.curr_state.change_state(new_state)
 
-    def entry_mp_action(self):
+    def btn_mp_action(self):
         pass
 
-    def entry_st_action(self):
+    def btn_st_action(self):
         self.game.curr_state.change_state(SettingsScreen(self.game))
 
-    def entry_cr_action(self):
+    def btn_cr_action(self):
         self.game.curr_state.change_state(CreditsScreen(self.game))
 
-    def entry_qt_action(self):
+    def btn_qt_action(self):
         self.game.curr_state.change_state(QuitScreen(self.game))
 
     def update(self, delta_time):
@@ -179,15 +231,15 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
                                      action=self.stackpanel_action)
         btn_classic = Button(game,
                              text='Classic Snake',
-                             action=self.entry_cl_action,
+                             action=self.btn_cl_action,
                              enabled=True)
         btn_timelimit = Button(game,
                                text='Time limit',
-                               action=self.entry_tl_action,
+                               action=self.btn_tl_action,
                                enabled=False)
         btn_back = Button(game,
                           text='Back',
-                          action=self.entry_bk_action)
+                          action=self.btn_bk_action)
 
         self.stackpanel.add_widgets(btn_classic,
                                     btn_timelimit,
@@ -207,14 +259,14 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
         txt = SP_GAME_MODES_DESC[selected]
         self.textbox.set_text(txt)
 
-    def entry_cl_action(self):
+    def btn_cl_action(self):
         state = SelectPlayerScreen(self.game, 1)
         self.game.curr_state.change_state(state)
 
-    def entry_tl_action(self):
+    def btn_tl_action(self):
         pass
 
-    def entry_bk_action(self):
+    def btn_bk_action(self):
         self.game.curr_state.change_state(self.prev_screen)
 
     def update(self, delta_time):
@@ -237,25 +289,25 @@ class SettingsScreen(GameStateScreen):
 
         btn_controls = Button(game,
                               text='Controls',
-                              action=self.entry_cl_action)
+                              action=self.btn_cl_action)
         btn_sound = Button(game,
                            text='Sound',
-                           action=self.entry_sn_action)
+                           action=self.btn_sn_action)
         btn_back = Button(game,
                           text='Back',
-                          action=self.entry_bk_action)
+                          action=self.btn_bk_action)
 
         self.stackpanel.add_widgets(btn_controls,
                                     btn_sound,
                                     btn_back)
 
-    def entry_cl_action(self):
+    def btn_cl_action(self):
         pass
 
-    def entry_sn_action(self):
+    def btn_sn_action(self):
         pass
 
-    def entry_bk_action(self):
+    def btn_bk_action(self):
         self.game.curr_state.change_state(self.prev_screen)
 
     def update(self, delta_time):
@@ -276,7 +328,7 @@ class CreditsScreen(GameStateScreen):
 
         self.btn_back = Button(game,
                                text='Back',
-                               action=self.entry_bk_action)
+                               action=self.btn_bk_action)
         self.container = StandaloneContainer(game,
                                              (0, 0),
                                              150,
@@ -284,7 +336,7 @@ class CreditsScreen(GameStateScreen):
                                              self.btn_back,
                                              focus=True)
 
-    def entry_bk_action(self):
+    def btn_bk_action(self):
         self.game.curr_state.change_state(self.prev_screen)
 
     def update(self, delta_time):
@@ -310,13 +362,13 @@ class QuitScreen(GameStateScreen):
         txt_question = label(game,
                              text='Are you sure you want to quit?')
         btn_yes = Button(game, text='Yes', action=self.game.quit)
-        btn_no = Button(game, text='No', action=self.entry_no_action)
+        btn_no = Button(game, text='No', action=self.btn_no_action)
 
         self.stackpanel.add_widgets(txt_question, btn_yes, btn_no)
 
         self.prev_screen = None
 
-    def entry_no_action(self):
+    def btn_no_action(self):
         self.game.curr_state.change_state(self.prev_screen)
 
     def update(self, delta_time):

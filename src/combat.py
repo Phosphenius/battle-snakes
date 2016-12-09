@@ -22,6 +22,7 @@ PLASMA_SHOT = {'tex': 'shot2', 'speed': 30, 'damage': 25,
 BOMB1 = {'tex': 'bomb1', 'damage': 50, 'lifetime': 30}
 
 # Weapons
+DUMMY = {'shot': '', 'type': 'NO WEAPON', 'ammo': 1, 'freq': 0.000001}
 STD_MG = {'shot': MG_SHOT1, 'type': 'MG', 'ammo': 999999, 'freq': 8}
 H_GUN = {'shot': SHOT1, 'type': 'Cannon', 'ammo': 20, 'freq': 1.3}
 PLASMA_GUN = {'shot': PLASMA_SHOT, 'type': 'Plasma', 'ammo': 50,

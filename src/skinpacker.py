@@ -58,7 +58,7 @@ def main():
 
         for tile, tile_pos in ((STRAIGHT1, (0, 10)),
                                (STRAIGHT2, (0, 20))):
-            single_tile.fill((0, 0 , 0 , 0))
+            single_tile.fill((0, 0, 0, 0))
             single_tile.blit(src_img, (0, 0), Rect(tile_pos, (10, 10)))
 
             dst_img.blit(single_tile, tile)

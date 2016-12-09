@@ -1,42 +1,46 @@
 <?xml version="1.0"?>
 <Powerups>
+	<Powerup name="classic snake food" tex="food1" autorespawn="true">
+		<action target="points" value="1"/>
+		<action target="grow" value="1"/>
+	</Powerup>
 	<Powerup name='food1' tex='food1' autorespawn='true'>
-		<action target='points' value='12'></action>
-		<action target='grow'  value='1'></action>
-		<action target='hp' value='5'></action>
-		<action target='boost' value='100'></action>
-		<action target='speed' value='0.12'></action>
+		<action target='points' value='12'/>
+		<action target='grow'  value='1'/>
+		<action target='hp' value='5'/>
+		<action target='boost' value='100'/>
+		<action target='speed' value='0.12'/>
 	</Powerup>
 	<Powerup name='food2' tex='food2' autorespawn='true'>
-		<action target='points' value='25'></action>
-		<action target='grow' value='1'></action>
-		<action target='hp' value='10'></action>
-		<action target='boost' value='180'></action>
-		<action target='speed' value='0.21'></action>
+		<action target='points' value='25'/>
+		<action target='grow' value='1'/>
+		<action target='hp' value='10'/>
+		<action target='boost' value='180'/>
+		<action target='speed' value='0.21'/>
 	</Powerup>
 	<Powerup name='food3' tex='food3' autorespawn='true'>
-		<action target='points' value='50'></action>
-		<action target='hp' value='42'></action>
-		<action target='boost' value='240'></action>
-		<action target='speed' value='0.45'></action>
+		<action target='points' value='50'/>
+		<action target='hp' value='42'/>
+		<action target='boost' value='240'/>
+		<action target='speed' value='0.45'/>
 	</Powerup>
 	<Powerup name='speedup1' tex='speedup1' lifetime='10' blinkrate='0.5' startblinkingat='7'>
-		<action target='points' value='1'></action>
-		<action target='boost' value='100000'></action>
-		<action target='speed' value='0.8'></action>
+		<action target='points' value='1'/>
+		<action target='boost' value='100000'/>
+		<action target='speed' value='0.8'/>
 	</Powerup>
 	<Powerup name='heal' tex='heal' lifetime='20' blinkrate='0.3' startblinkingat='18'>
-		<action target='points' value='8'></action>
-		<action target='hp' value='450'></action>
-		<action target='boost' value='1000000'></action>
-		<action target='speed' value='0.15'></action>
+		<action target='points' value='8'/>
+		<action target='hp' value='450'/>
+		<action target='boost' value='1000000'/>
+		<action target='speed' value='0.15'/>
 	</Powerup>
 	<Powerup name='jackpot' tex='jackpot' lifetime='20' blinkrate='0.25' startblinkingat='15'>
-		<action target='lifes' value='1'></action>
-		<action target='points' value='250'></action>
-		<action target='hp' value='500'></action>
+		<action target='lifes' value='1'/>
+		<action target='points' value='250'/>
+		<action target='hp' value='500'/>
 	</Powerup>
 	<Powerup name='life' tex='life' lifetime='15' blinkrate='0.1' startblinkingat='14'>
-		<action target='lifes' value='1'></action>
+		<action target='lifes' value='1'/>
 	</Powerup>
 </Powerups>

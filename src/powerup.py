@@ -116,6 +116,11 @@ class PowerupManager(object):
                             {'target': t_attr, 'value': float(val_attr)
                              if '.' in val_attr else int(val_attr)})
 
+    def clear(self):
+        """Clear powerup pool and spawners"""
+        self.pwrup_pool = list()
+        self.pwrup_spawners = list()
+
     def get_powerups(self):
         """Return active powerups as tuple."""
         alive_pwrups = []
