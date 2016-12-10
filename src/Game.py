@@ -10,7 +10,7 @@ import random
 from ConfigParser import SafeConfigParser
 
 import pygame
-from pygame.locals import QUIT, K_q, K_ESCAPE
+from pygame.locals import QUIT
 
 from gsm import MenuState
 from fsm import FiniteStateMachine
@@ -190,9 +190,6 @@ class BattleSnakesGame(FiniteStateMachine):
         """Update the game."""
         self.key_manager.update()
         self.curr_state.update(delta_time)
-
-        if self.key_manager.any_pressed(K_q, K_ESCAPE):
-            self.quit()
 
     def draw(self):
         """Render."""

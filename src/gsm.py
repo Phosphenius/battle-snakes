@@ -3,6 +3,8 @@
 from abc import abstractmethod
 from itertools import count
 
+from pygame.locals import K_ESCAPE
+
 from fsm import State, FiniteStateMachine
 from gui import (Button, label, StackPanel, TextDisplay,
                  StandaloneContainer, PlayerSlot)
@@ -94,25 +96,61 @@ class GamePausedScreen(GameStateScreen):
     def __init__(self, game, mode):
         GameStateScreen.__init__(self, game)
         self.mode = mode
+        self.prev_state = None
 
-        self.stack_panel = StackPanel(game, (0, 0), 250)
+        self.stack_panel = StackPanel(game, (515, 280), 250)
+
+        lab_paused = label(game, text='Game paused')
+        btn_resume = Button(game, text='Resume Game',
+                            action=self.btn_resume_action)
+        btn_opts = Button(game, text='Options',
+                          action=self.btn_opts_action,
+                          enabled=False)
+        btn_menu = Button(game, text='Return to main menu',
+                          action=self.btn_menu_action)
+        btn_quit = Button(game, text='Quit',
+                          action=self.btn_quit_action)
+
+        self.stack_panel.add_widgets(lab_paused, btn_resume, btn_opts,
+                                     btn_menu, btn_quit)
+
+    def btn_resume_action(self):
+        self.game.curr_state.change_state(self.prev_state)
+
+    def btn_opts_action(self):
+        pass # TODO: Yet to be implemented.
+
+    def btn_menu_action(self):
+        self.game.change_state(MenuState(self.game))
+
+    def btn_quit_action(self):
+        self.game.curr_state.change_state(QuitScreen(self.game))
 
     def update(self, delta_time):
-        pass
+        self.stack_panel.update(delta_time)
 
     def draw(self):
         self.mode.draw()
+        self.stack_panel.draw()
+
+    def enter(self, old_state):
+        self.prev_state = old_state
 
 
 class PlayingState(GameStateScreen):
     def __init__(self, game, mode):
         GameStateScreen.__init__(self, game)
         self.mode = mode
+        # FIXME: This really necessary?
         self.game.tilemap = mode.tilemap
         self.mode.start()
 
     def update(self, delta_time):
         self.mode.update(delta_time)
+
+        if self.game.key_manager.key_tapped(K_ESCAPE):
+            state = GamePausedScreen(self.game, self.mode)
+            self.game.curr_state.change_state(state)
 
     def draw(self):
         self.mode.draw()
