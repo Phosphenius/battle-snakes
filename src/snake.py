@@ -6,7 +6,7 @@ Snake module.
 from pygame import Rect
 
 from constants import (MAX_HITPOINTS,
-                      INIT_SPEED, MIN_SPEED, MAX_SPEED)
+                       INIT_SPEED, MIN_SPEED, MAX_SPEED)
 from constants import INVINCIBILITY_BLINK_RATE
 from utils import add_vecs, sub_vecs, normalize, m_distance
 
@@ -34,7 +34,7 @@ NW = N + W
 STRAIGHT = 0x10
 VERTICAL = 0x20
 
-# Maps vectors to their corresponding flags.
+# Maps vectors to their corresponding direction flags.
 VEC_TO_DIRFLAG = {(0, -1): N, (1, 0): E, (0, 1): S, (-1, 0): W}
 
 HEAD = {N: Rect(00, 00, 10, 10), S: Rect(10, 10, 10, 10),

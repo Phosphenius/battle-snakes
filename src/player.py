@@ -12,8 +12,8 @@ from snake import Snake, LEFT, RIGHT, UP, DOWN
 from utils import add_vecs
 from combat import Weapon, DUMMY
 from constants import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
-                      BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
-                      PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
+                       BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
+                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
 
 
 class PlayerBase(object):

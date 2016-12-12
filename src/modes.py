@@ -7,7 +7,7 @@ from collections import defaultdict
 from powerup import PowerupManager
 from map import Map
 from constants import (SPAWNPOINT_TAG, WALL_TAG, PWRUP_TAG, SHOT_TAG,
-                      PORTAL_TAG, SCR_W, PANEL_H)
+                       PORTAL_TAG, SCR_W, PANEL_H)
 from utils import mul_vec, add_vecs
 from player import Player
 import gsm
@@ -42,7 +42,6 @@ class GameModeBase(object):
         if self.num_dead_players >= len(self.players):
             screen = gsm.GameOverScreen(self.game, self)
             self.game.curr_state.change_state(screen)
-
 
     def start(self):
         for player in self.players:

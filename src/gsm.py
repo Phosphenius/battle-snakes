@@ -118,7 +118,7 @@ class GamePausedScreen(GameStateScreen):
         self.game.curr_state.change_state(self.prev_state)
 
     def btn_opts_action(self):
-        pass # TODO: Yet to be implemented.
+        pass  # TODO: Yet to be implemented.
 
     def btn_menu_action(self):
         self.game.change_state(MenuState(self.game))

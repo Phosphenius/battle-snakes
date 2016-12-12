@@ -138,7 +138,7 @@ class Map(object):
 
             for portal in self.portals:
                 if (self.portals[portal][0] in tiles and
-                            portal not in tiles):
+                        portal not in tiles):
                     portals.append(portal)
 
             self.islands.append(MapAccessibilityNode(tiles, portals))
@@ -160,9 +160,9 @@ class Map(object):
 
     def get_spawnpoint(self):
         """Return  random, unblocked spawnpoint."""
-        return self.game.randomizer.choice([spawnpoint for spawnpoint in
-                                       self.spawnpoints
-                                       if self.sp_unblocked(spawnpoint)])
+        unblocked_sp = [spawnpoint for spawnpoint in self.spawnpoints if
+                        self.sp_unblocked(spawnpoint)]
+        return self.game.randomizer.choice(unblocked_sp)
 
     def sp_unblocked(self, spawnpoint):
         """Determine if a spawnpoint is blocked."""
@@ -179,7 +179,7 @@ class Map(object):
             pos = (self.game.randomizer.randint(1, self.width-1),
                    self.game.randomizer.randint(1, self.height-1))
             if (pos not in self.game.curr_state.mode.spatialhash and
-                        pos not in self.tiles):
+                    pos not in self.tiles):
                 return pos
 
     def draw(self):

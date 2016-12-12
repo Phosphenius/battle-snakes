@@ -140,7 +140,7 @@ class StackPanel(object):
             self.widgets[self.selected].focus = True
             self.on_action()
         elif (self.game.key_manager.key_tapped(self.action_keys[1]) and
-                  self.focusable_widgets):
+              self.focusable_widgets):
             self.widgets[self.selected].focus = False
 
             while True:
@@ -231,7 +231,7 @@ class WidgetBase(object):
         bg_size = (border.width - self.brd_thickness * 2,
                    border.height - self.brd_thickness * 2)
         bg_pos = add_vecs(pos,
-                             (self.brd_thickness, self.brd_thickness))
+                         (self.brd_thickness, self.brd_thickness))
         background = pygame.Rect(bg_pos, bg_size)
         pygame.draw.rect(self.game.screen, self.bg_color, background)
 
@@ -431,14 +431,13 @@ class PlayerSlot(object):
         self._player = False
         self._ready = False
 
-
         # TODO: Color this according to player id
-        self.lab_playerid = label(game, text='<open>',
+        self.lbl_playerid = label(game, text='<open>',
                                   height=30, big_text=False,
                                   focus_enabled=True, focus=True,
                                   brd_color=ORANGE)
 
-        self.lab_skin = label(game, text='Skin:', height=30,
+        self.lbl_skin = label(game, text='Skin:', height=30,
                               big_text=False)
 
         self.skin_full_names = {}
@@ -457,8 +456,8 @@ class PlayerSlot(object):
         init_skin = self.skin_full_names[self.cyc_skin.elements[0]]
         self.snake_av = SnakeAvatar(game, init_skin)
 
-        self.stack_panel.add_widgets(self.lab_playerid, self.snake_av,
-                                     self.lab_skin, self.cyc_skin)
+        self.stack_panel.add_widgets(self.lbl_playerid, self.snake_av,
+                                     self.lbl_skin, self.cyc_skin)
 
         # TODO: Put widgets into list so we can access outside init.
         for index in range(self.num_weapons):
@@ -517,10 +516,10 @@ class PlayerSlot(object):
         for btn in (self.btn_abort, self.btn_ready):
             btn.action_key = player['ctrls']['action']
 
-        self.lab_playerid.text = 'Player{0}'.format(player['id'])
-        self.lab_playerid.text_color = player['color']
-        self.lab_playerid.focus = False
-        self.lab_playerid.focus_enabled = False
+        self.lbl_playerid.text = 'Player{0}'.format(player['id'])
+        self.lbl_playerid.text_color = player['color']
+        self.lbl_playerid.focus = False
+        self.lbl_playerid.focus_enabled = False
         self.stack_panel.change_focus(3)
 
     def cyc_skin_action(self, new_val):

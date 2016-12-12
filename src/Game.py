@@ -157,7 +157,7 @@ def load_player_config(hpid):
                                                      'action')
     config['ctrls']['boost'] = config_parser.getint('controls', 'boost')
     config['ctrls']['nextweapon'] = config_parser.getint('controls',
-                                                'nextweapon')
+                                                         'nextweapon')
     return config
 
 
