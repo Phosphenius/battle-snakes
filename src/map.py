@@ -7,8 +7,12 @@ import xml.dom.minidom as dom
 import os
 from heapq import nsmallest
 
+import pygame
+from pygame.locals import SRCALPHA
+
 from utils import str_to_vec, str_to_vec_lst, get_adjacent, grid, \
     m_distance
+from constants import SCR_W, ROWS, CELL_SIZE, PANEL_H
 from snake import DIRECTIONS
 
 
@@ -66,7 +70,17 @@ class Map(object):
         self.portals = {}  # {p1:(p2, dir), p2:(p1, dir)}
         self.islands = []
 
+        size = (SCR_W, ROWS * CELL_SIZE)
+        self.tiles_surf = pygame.Surface(size, flags=SRCALPHA)
+        self.tiles_surf.fill((0, 0, 0, 0))
+
         self.load_map(path)
+
+        # Render all tiles onto one surface to save blit calls
+        for xpos, ypos in self.tiles:
+            tex = self.game.graphics.textures['wall']
+            self.tiles_surf.blit(tex,
+                                 (xpos * CELL_SIZE, ypos * CELL_SIZE))
 
     def load_map(self, path):
         doc = dom.parse(path)
@@ -170,8 +184,7 @@ class Map(object):
 
     def draw(self):
         """Draw map."""
-        for tile in self.tiles:
-            self.game.graphics.draw('wall', tile)
+        self.game.screen.blit(self.tiles_surf, (0, PANEL_H))
 
         for spawnpoint in self.spawnpoints:
             self.game.graphics.draw('spawnpoint', spawnpoint)
