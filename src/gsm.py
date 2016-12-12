@@ -127,6 +127,9 @@ class GamePausedScreen(GameStateScreen):
         self.game.curr_state.change_state(QuitScreen(self.game))
 
     def update(self, delta_time):
+        if self.game.key_manager.key_tapped(K_ESCAPE):
+            self.game.curr_state.change_state(self.prev_state)
+
         self.stack_panel.update(delta_time)
 
     def draw(self):
