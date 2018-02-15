@@ -37,7 +37,10 @@ TILE_OBJ = 0
 SPAWNPOINT_OBJ = 1
 
 
-def make_line_of_tiles(point1, point2):
+def gen_tile_line(point1, point2):
+    """
+    Generates a line of tiles from point1 to point2
+    """
     tile_lst = []
     if point1[0] == point2[0]:
         startpoint = min(point1[1], point2[1])
@@ -51,6 +54,28 @@ def make_line_of_tiles(point1, point2):
             tile_lst.append((xpos, point1[1]))
 
     return tile_lst
+
+
+def gen_tile_rect(point1, point2):
+    """
+    Generates a list of tiles forming a rectangle with the diagonal
+    point2 - point1
+    """
+    tile_rect = list()
+    
+    width = abs(point1[0] - point2[0])
+    height = abs(point1[1] - point2[1])
+    
+    topleft = min(point1[0], point2[0]), min(point1[1], point2[1])
+    botright = max(point1[0], point2[0]), max(point1[1], point2[1])
+    
+    hort1 = gen_tile_line(topleft, (topleft[0] + width, topleft[1]))
+    hort2 = gen_tile_line(botright, (botright[0] - width, botright[1]))
+    vert1 = gen_tile_line(topleft, (topleft[0], topleft[1] + height))
+    vert2 = gen_tile_line(botright, (botright[0], botright[1] - height))
+    
+    return list(set(hort1 + hort2 + vert1 + vert2))
+    
 
 
 class TileMap(object):
@@ -105,8 +130,8 @@ class TileTool(object):
     def __init__(self, editor):
         self.editor = editor
 
-        self.point1 = None
-        self.tile_line = None
+        self.startpoint = None
+        self.preview = None
 
     def update(self):
         if self.editor.input.key_pressed('CONTROL_L'):
@@ -120,22 +145,32 @@ class TileTool(object):
                 self.fill_horizontal()
             elif self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON):
                 self.remove_horizontal()
+                
         elif (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
               self.editor.input.key_pressed('SHIFT_L')):
-            if self.point1 is not None:
-                if (self.point1[0] == self.editor.selected[0] or
-                        self.point1[1] == self.editor.selected[1]):
+                  
+            if self.startpoint is not None: 
+                
+                tile_lst = []
+                
+                if (self.startpoint[0] == self.editor.selected[0] or
+                    self.startpoint[1] == self.editor.selected[1]):
 
-                    tile_lst = make_line_of_tiles(self.point1,
-                                                  self.editor.selected)
+                    tile_lst = gen_tile_line(self.startpoint,
+                                             self.editor.selected)
+                else:
+                    tile_lst = gen_tile_rect(self.startpoint,
+                                             self.editor.selected)
 
-                    cmd = EditMapCommand(
-                        tile_lst,
-                        self.editor.tilemap,
-                        TILE_OBJ)
+                cmd = EditMapCommand(
+                    tile_lst,
+                    self.editor.tilemap,
+                    TILE_OBJ)
 
-                    self.editor.cmd_manager.exec_cmd(cmd)
-            self.point1 = self.editor.selected
+                self.editor.cmd_manager.exec_cmd(cmd)
+                    
+                    
+            self.startpoint = self.editor.selected
 
         if self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and \
                 self.editor.selected not in self.editor.tilemap.tiles \
@@ -150,7 +185,7 @@ class TileTool(object):
             self.editor.cmd_manager.exec_cmd(cmd)
 
         if self.editor.input.key_tapped('SHIFT_L'):
-            self.point1 = None
+            self.startpoint = None
 
         if (self.editor.input.button_pressed(RIGHT_MOUSE_BUTTON) and
                 self.editor.selected in self.editor.tilemap.tiles):
@@ -163,28 +198,29 @@ class TileTool(object):
 
             self.editor.cmd_manager.exec_cmd(cmd)
 
-        if self.point1 is not None:
-            if self.point1[0] == self.editor.selected[0]:
-                self.tile_line = make_line_of_tiles(self.point1,
-                                                    self.editor.selected)
-            elif self.point1[1] == self.editor.selected[1]:
-                self.tile_line = make_line_of_tiles(self.point1,
-                                                    self.editor.selected)
+        # preview for line and rectangle tool
+        if self.startpoint is not None:
+            if (self.startpoint[0] == self.editor.selected[0] or 
+                self.startpoint[1] == self.editor.selected[1]):
+        
+                self.preview = gen_tile_line(self.startpoint,
+                                             self.editor.selected)
             else:
-                self.tile_line = None
+                self.preview = gen_tile_rect(self.startpoint, 
+                                             self.editor.selected)
         else:
-            self.tile_line = None
+            self.preview = None
 
     def draw(self, screen):
-        if self.tile_line is not None:
-            for tile in self.tile_line:
+        if self.preview is not None:
+            for tile in self.preview:
                 screen.blit(self.editor.wall_tex, tile)
 
-        if self.point1 is not None:
-            screen.blit(self.editor.wall_tex, self.point1)
+        if self.startpoint is not None:
+            screen.blit(self.editor.wall_tex, self.startpoint)
 
     def fill_horizontal(self):
-        tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
+        tile_lst = gen_tile_line((0, self.editor.selected[1]),
                                       (DISPLAY_WIDTH,
                                        self.editor.selected[1]))
 
@@ -192,7 +228,7 @@ class TileTool(object):
         self.editor.cmd_manager.exec_cmd(cmd)
 
     def fill_vertical(self):
-        tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
+        tile_lst = gen_tile_line((self.editor.selected[0], 0),
                                       (self.editor.selected[0],
                                        DISPLAY_HEIGHT))
 
@@ -200,7 +236,7 @@ class TileTool(object):
         self.editor.cmd_manager.exec_cmd(cmd)
 
     def remove_horizontal(self):
-        tile_lst = make_line_of_tiles((0, self.editor.selected[1]),
+        tile_lst = gen_tile_line((0, self.editor.selected[1]),
                                       (DISPLAY_WIDTH,
                                        self.editor.selected[1]))
 
@@ -211,7 +247,7 @@ class TileTool(object):
         self.editor.cmd_manager.exec_cmd(cmd)
 
     def remove_vertical(self):
-        tile_lst = make_line_of_tiles((self.editor.selected[0], 0),
+        tile_lst = gen_tile_line((self.editor.selected[0], 0),
                                       (self.editor.selected[0],
                                        DISPLAY_HEIGHT))
 
