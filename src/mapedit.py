@@ -62,20 +62,20 @@ def gen_tile_rect(point1, point2):
     point2 - point1
     """
     tile_rect = list()
-    
+
     width = abs(point1[0] - point2[0])
     height = abs(point1[1] - point2[1])
-    
+
     topleft = min(point1[0], point2[0]), min(point1[1], point2[1])
     botright = max(point1[0], point2[0]), max(point1[1], point2[1])
-    
+
     hort1 = gen_tile_line(topleft, (topleft[0] + width, topleft[1]))
     hort2 = gen_tile_line(botright, (botright[0] - width, botright[1]))
     vert1 = gen_tile_line(topleft, (topleft[0], topleft[1] + height))
     vert2 = gen_tile_line(botright, (botright[0], botright[1] - height))
-    
+
     return list(set(hort1 + hort2 + vert1 + vert2))
-    
+
 
 
 class TileMap(object):
@@ -145,14 +145,14 @@ class TileTool(object):
                 self.fill_horizontal()
             elif self.editor.input.button_tapped(RIGHT_MOUSE_BUTTON):
                 self.remove_horizontal()
-                
+
         elif (self.editor.input.button_tapped(LEFT_MOUSE_BUTTON) and
               self.editor.input.key_pressed('SHIFT_L')):
-                  
-            if self.startpoint is not None: 
-                
+
+            if self.startpoint is not None:
+
                 tile_lst = []
-                
+
                 if (self.startpoint[0] == self.editor.selected[0] or
                     self.startpoint[1] == self.editor.selected[1]):
 
@@ -168,8 +168,8 @@ class TileTool(object):
                     TILE_OBJ)
 
                 self.editor.cmd_manager.exec_cmd(cmd)
-                    
-                    
+
+
             self.startpoint = self.editor.selected
 
         if self.editor.input.button_pressed(LEFT_MOUSE_BUTTON) and \
@@ -200,13 +200,13 @@ class TileTool(object):
 
         # preview for line and rectangle tool
         if self.startpoint is not None:
-            if (self.startpoint[0] == self.editor.selected[0] or 
+            if (self.startpoint[0] == self.editor.selected[0] or
                 self.startpoint[1] == self.editor.selected[1]):
-        
+
                 self.preview = gen_tile_line(self.startpoint,
                                              self.editor.selected)
             else:
-                self.preview = gen_tile_rect(self.startpoint, 
+                self.preview = gen_tile_rect(self.startpoint,
                                              self.editor.selected)
         else:
             self.preview = None
@@ -382,7 +382,7 @@ class InputManager(object):
         else:
             try:
                 self.curr_key_state.remove(event.keysym.upper())
-            except:
+            except Exception:
                 pass  # Don't do anything.
 
     def capture_button_press(self, event):

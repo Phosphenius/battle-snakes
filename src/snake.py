@@ -325,56 +325,55 @@ class Snake(object):
 
     def draw(self):
         """Draw snake."""
-        if not self.isalive:
+        if not self.isalive or not self.isvisible:
             return
-        if self.isvisible:
-            body_len = len(self.body)
-            area = None
-            tilemap = self.game.curr_state.mode.tilemap
 
-            # TODO: Needs refactoring, indentation is way too deep...
-            for index, part in enumerate(self.body):
-                if index == 0:
-                    if self.heading and self.heading != (0, 0):
-                        area = HEAD[VEC_TO_DIRFLAG[self.heading]]
-                    else:
-                        area = HEAD[W]
+        body_len = len(self.body)
+        area = None
+        tilemap = self.game.curr_state.mode.tilemap
 
-                elif 0 < index < (body_len - 1):
-                    argm = get_arrangement(self.body, index, tilemap)
-
-                    if argm & STRAIGHT == STRAIGHT:
-                        if argm & VERTICAL == VERTICAL:
-                            if index % 2:
-                                area = STRAIGHT1_V
-                            else:
-                                area = STRAIGHT2_V
-                        else:
-                            if index % 2:
-                                area = STRAIGHT1_H
-                            else:
-                                area = STRAIGHT2_H
-                    else:
-                        area = TURN[argm & 15]
+        for index, part in enumerate(self.body):
+            if index == 0:
+                if self.heading and self.heading != (0, 0):
+                    area = HEAD[VEC_TO_DIRFLAG[self.heading]]
                 else:
-                    if self.heading and self.heading != (0, 0):
-                        tail = self.body[body_len-1]
-                        second_last = self.body[body_len-2]
-                        apart = m_distance(tail, second_last) > 1
+                    area = HEAD[W]
 
-                        if apart:
-                            portal = get_next_to_portal(tail, tilemap)
+            elif 0 < index < (body_len - 1):
+                argm = get_arrangement(self.body, index, tilemap)
 
-                            if portal:
-                                second_last = portal
-
-                        vec = sub_vecs(second_last, tail)
-
-                        area = TAIL[VEC_TO_DIRFLAG[normalize(vec)]]
+                if argm & STRAIGHT == STRAIGHT:
+                    if argm & VERTICAL == VERTICAL:
+                        if index % 2:
+                            area = STRAIGHT1_V
+                        else:
+                            area = STRAIGHT2_V
                     else:
-                        area = TAIL[W]
+                        if index % 2:
+                            area = STRAIGHT1_H
+                        else:
+                            area = STRAIGHT2_H
+                else:
+                    area = TURN[argm & 15]
+            else:
+                if self.heading and self.heading != (0, 0):
+                    tail = self.body[body_len-1]
+                    second_last = self.body[body_len-2]
+                    apart = m_distance(tail, second_last) > 1
 
-                self.game.graphics.draw(self.skin, part, area=area)
+                    if apart:
+                        portal = get_next_to_portal(tail, tilemap)
+
+                        if portal:
+                            second_last = portal
+
+                    vec = sub_vecs(second_last, tail)
+
+                    area = TAIL[VEC_TO_DIRFLAG[normalize(vec)]]
+                else:
+                    area = TAIL[W]
+
+            self.game.graphics.draw(self.skin, part, area=area)
 
     def __setitem__(self, i, item):
         self.body[i] = item
