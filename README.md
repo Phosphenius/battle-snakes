@@ -1,23 +1,29 @@
-Battle Snakes v0.1.0
-====================
+Battle Snakes
+=============
+Battle Snakes is a snake action game written entirely in python and featuring:
+ * maps
+ * weapons,
+ * skins
+ * teleporters
+ * computer players
+ * map editor
+ * and local player vs. player mode.
 
-Snake inspired game still in early development.
+... and a lot more which has still to be implemented.
 
-![screenshot](https://raw.github.com/Teazer/battle-snakes/master/screenshot.png)
+The development of battle snakes started out as late at night idea of modifiying a snake game I had written. So it was never planned and I keep adding code whenever I feel like it.
 
-####Controls
+If you like the idea of a snake action game, feel free to contribute your ideas, graphics and code.
 
-* Movement = Arrow Keys
-* Fire weapon = l 
-* Activate Speed Boost = k 
-* Switch to next weapon = j
 
-####How to run 
+## Dependencies
+ * Python2.7 (no python3 support yet)
+ * Pygame
+ * tkinter for the map editor
 
-Make sure you have the latest version (1.9.1) of pygame installed.
-Then execute `Game.py` 
 
-Simple as that.
+
+
 
 
 
