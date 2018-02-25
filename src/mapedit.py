@@ -437,13 +437,13 @@ class InitState(object):
 
 
 class EditState(object):
-    def __init__(self, state_context):
+    def __init__(self, state_context, grid_var, helplines_var):
         self.context = state_context
         self.input = self.context.input
         self.cmd_manager = CommandManager()
 
-        self.show_grid = True
-        self.show_help_lines = True
+        self.grid_var = grid_var
+        self.helplines_var = helplines_var
 
         self.selected = None
 
@@ -509,11 +509,11 @@ class EditState(object):
 
             # Toggle grid
             if self.context.input.key_tapped('G'):
-                self.show_grid = not self.show_grid
+                self.grid_var.set(not self.grid_var.get())
 
             # Toggle 'help lines'
             if self.context.input.key_tapped('H'):
-                self.show_help_lines = not self.show_help_lines
+                self.helplines_var.set(not self.helplines_var.get())
         else:
             if self.context.input.key_tapped('T'):
                 self.tool = TileTool(self)
@@ -530,7 +530,7 @@ class EditState(object):
         self.tool.update()
 
     def draw(self, screen):
-        if self.show_grid:
+        if self.grid_var.get():
             self.draw_grid(screen)
 
         self.tilemap.draw(screen)
@@ -541,7 +541,7 @@ class EditState(object):
                          pygame.Rect(self.selected,
                                      (CELL_SIZE, CELL_SIZE)))
 
-        if self.show_help_lines:
+        if self.helplines_var.get():
             half_size = CELL_SIZE / 2
 
             point1 = (self.selected[0] + half_size, 0)
@@ -585,6 +585,7 @@ class MapEditor(FiniteStateMachine):
         self.root.rowconfigure(0, weight=1)
         self.root.rowconfigure(1)
         self.root.columnconfigure(0, weight=1)
+        self.root.columnconfigure(1)
 
         top = self.root.winfo_toplevel()
         self.menu_bar = tk.Menu(top)
@@ -626,10 +627,36 @@ class MapEditor(FiniteStateMachine):
         self.file_menu.entryconfig(4, state=tk.DISABLED)
 
         self.embed = tk.Frame(self.root, width=1400, height=700)
-        self.embed.grid(row=0, column=0)
+        self.embed.grid(row=0, column=0, sticky=tk.NW)
 
         self.label_tile_pos = tk.Label(self.root, text='pos: ')
         self.label_tile_pos.grid(row=1, column=0, sticky=tk.NW)
+
+        self.toolbox = tk.Frame(self.root)
+        self.toolbox.grid(row=0, column=1, sticky=tk.NW)
+
+        self.settings_group = tk.LabelFrame(self.toolbox, text='General editor settings')
+        self.settings_group.pack()
+
+        self.grid_var = tk.IntVar()
+        self.grid_var.set(1)
+        self.helplines_var = tk.IntVar()
+        self.helplines_var.set(1)
+
+        self.check_grid = tk.Checkbutton(self.settings_group,
+                                         text='Show Grid',
+                                         variable=self.grid_var,
+                                         onvalue=1,
+                                         offvalue=0)
+        self.check_grid.pack(side=tk.LEFT)
+
+        self.check_helplines = tk.Checkbutton(self.settings_group,
+                                              text='Show Help Lines',
+                                              variable=self.helplines_var,
+                                              onvalue=1,
+                                              offvalue=0)
+        self.check_helplines.pack()
+
 
         os.environ['SDL_WINDOWID'] = str(self.embed.winfo_id())
 
@@ -649,7 +676,7 @@ class MapEditor(FiniteStateMachine):
         self.label_tile_pos.config(text=msg_str)
 
     def file_new(self):
-        self.change_state(EditState(self))
+        self.change_state(EditState(self, self.grid_var, self.helplines_var))
 
     #~ def file_open(self):
         #~ result = filedia.askopenfilename(
