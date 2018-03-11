@@ -7,6 +7,7 @@ Map editor using a pygame window embedded into a tkinter frame
 
 import Tkinter as tk
 import tkFileDialog as filedia
+import tkMessageBox
 import os
 from collections import deque
 from copy import copy
@@ -16,7 +17,6 @@ import pygame
 
 from colors import BLACK, ORANGE, GREEN, DARK_GRAY
 from utils import vec_lst_to_str
-from fsm import FiniteStateMachine
 
 
 FPS = 30
@@ -61,8 +61,6 @@ def gen_tile_rect(point1, point2):
     Generates a list of tiles forming a rectangle with the diagonal
     point2 - point1
     """
-    tile_rect = list()
-
     width = abs(point1[0] - point2[0])
     height = abs(point1[1] - point2[1])
 
@@ -296,6 +294,8 @@ class CommandManager(object):
         self.undo_stack = deque(maxlen=MAX_UNDO_REDO)
         self.redo_stack = deque(maxlen=MAX_UNDO_REDO)
 
+        self.state_change_listener = []
+
     def exec_cmd(self, cmd):
         """
         Execute a command and push it onto the undo stack.
@@ -304,6 +304,9 @@ class CommandManager(object):
 
         self.undo_stack.append(cmd)
 
+        for callback in self.state_change_listener:
+            callback()
+
     def undo(self):
         """Undo a command."""
         if len(self.undo_stack) > 0:
@@ -311,12 +314,26 @@ class CommandManager(object):
             self.redo_stack.append(cmd)
             cmd.undo()
 
+            for callback in self.state_change_listener:
+                callback()
+
     def redo(self):
         """Redo a command."""
         if len(self.redo_stack) > 0:
             cmd = self.redo_stack.pop()
             self.undo_stack.append(cmd)
             cmd.do()
+
+            for callback in self.state_change_listener:
+                callback()
+
+    def reset(self):
+        """
+        Reset the command manager
+        :return:
+        """
+        self.undo_stack = deque(maxlen=MAX_UNDO_REDO)
+        self.redo_stack = deque(maxlen=MAX_UNDO_REDO)
 
 
 class EditMapCommand(object):
@@ -418,161 +435,26 @@ class InputManager(object):
         return (button not in self.curr_button_state and
                 button in self.prev_button_state)
 
-
-class InitState(object):
-    def __init__(self, state_context):
-        self.context = state_context
-
-    def enter(self, old_state):
-        pass
-
-    def leave(self):
-        pass
-
-    def update(self):
-        pass
-
-    def draw(self, screen):
-        pass
-
-
-class EditState(object):
-    def __init__(self, state_context, grid_var, helplines_var):
-        self.context = state_context
-        self.input = self.context.input
-        self.cmd_manager = CommandManager()
-
-        self.grid_var = grid_var
-        self.helplines_var = helplines_var
-
-        self.selected = None
-
-        self.wall_tex = pygame.image.load('../gfx/wall.png').convert()
-        self.spawnpoint_tex = (
-            pygame.image.load('../gfx/spawnpoint.png').convert())
-
-        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
-
-        self.tool = TileTool(self)
-
-        self.save_path = u''
-
-    def file_save(self):
+    def reset_keys(self):
         """
-        Write map data as xml to the file specified in 'save_path'.
+        Reset key states. This is needed to fix some weird bug
+        where the control key won't unregister as being pressed
+        after a dialog
+        :return:
         """
-        if self.save_path is not u'':
-            self.tilemap.save(self.save_path)
-        else:
-            self.file_save_as()
-
-    def file_save_as(self):
-        """
-        Open file dialog and write map data as xml to the file
-        selected by the user.
-        """
-        result = filedia.asksaveasfilename(
-            defaultextension='.xml',
-            initialdir='/',
-            initialfile='untiteld',
-            title='Save map')
-
-        if result is not u'':
-            self.save_path = result
-            self.tilemap.save(result)
-
-    def enter(self, old_state):
-        """Enter edit state and change the file menu accordingly."""
-        self.context.file_menu.entryconfig(3, state=tk.NORMAL,
-                                           command=self.file_save)
-        self.context.file_menu.entryconfig(4, state=tk.NORMAL,
-                                           command=self.file_save_as)
-
-    def leave(self):
-        """Leave edit state and change the file menu accordingly."""
-        self.context.file_menu.entryconfig(3, state=tk.DISABLED,
-                                           command=None)
-        self.context.file_menu.entryconfig(4, state=tk.DISABLED,
-                                           command=None)
-
-    def update(self):
-        # Undo & redo
-        if self.context.input.key_pressed('CONTROL_L'):
-            if self.context.input.key_tapped('Z'):
-                self.cmd_manager.undo()
-            elif self.context.input.key_tapped('Y'):
-                self.cmd_manager.redo()
-
-            # Save file
-            if self.context.input.key_tapped('S'):
-                self.file_save()
-
-            # Toggle grid
-            if self.context.input.key_tapped('G'):
-                self.grid_var.set(not self.grid_var.get())
-
-            # Toggle 'help lines'
-            if self.context.input.key_tapped('H'):
-                self.helplines_var.set(not self.helplines_var.get())
-        else:
-            if self.context.input.key_tapped('T'):
-                self.tool = TileTool(self)
-            elif self.context.input.key_tapped('S'):
-                self.tool = SpawnpointTool(self)
-
-        # Update selected cell
-        row = self.context.input.mouse_y / CELL_SIZE
-        col = self.context.input.mouse_x / CELL_SIZE
-        self.selected = (
-            (col if col < COLS else COLS-1) * CELL_SIZE,
-            (row if row < ROWS else ROWS-1) * CELL_SIZE)
-
-        self.tool.update()
-
-    def draw(self, screen):
-        if self.grid_var.get():
-            self.draw_grid(screen)
-
-        self.tilemap.draw(screen)
-
-        self.tool.draw(screen)
-
-        pygame.draw.rect(screen, ORANGE,
-                         pygame.Rect(self.selected,
-                                     (CELL_SIZE, CELL_SIZE)))
-
-        if self.helplines_var.get():
-            half_size = CELL_SIZE / 2
-
-            point1 = (self.selected[0] + half_size, 0)
-            point2 = (self.selected[0] + half_size, DISPLAY_HEIGHT)
-
-            pygame.draw.line(screen, GREEN, point1, point2)
-
-            point1 = (0, self.selected[1] + half_size)
-            point2 = (DISPLAY_WIDTH, self.selected[1] + half_size)
-
-            pygame.draw.line(screen, GREEN, point1, point2)
-
-    def draw_grid(self, screen):
-        """Draw a grid"""
-        for xpos in range(0, DISPLAY_WIDTH, CELL_SIZE):
-            pygame.draw.line(screen, DARK_GRAY, (xpos, 0),
-                             (xpos, DISPLAY_HEIGHT))
-
-        for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
-            pygame.draw.line(screen, DARK_GRAY, (0, ypos),
-                             (DISPLAY_WIDTH, ypos))
+        self.prev_key_state = []
+        self.curr_key_state = []
 
 
-class MapEditor(FiniteStateMachine):
+class MapEditor(object):
     def __init__(self):
-        FiniteStateMachine.__init__(self, InitState(self))
-
         self.input = InputManager(DISPLAY_WIDTH * 0.5,
                                   DISPLAY_HEIGHT * 0.5)
 
         self.root = tk.Tk()
+
+        self.root.protocol('WM_DELETE_WINDOW', self.window_close)
+
         self.root.bind('<Motion>', self.input.mouse_motion)
         self.root.bind('<KeyPress>', self.input.capture_key_press)
         self.root.bind('<KeyRelease>', self.input.capture_key_release)
@@ -594,6 +476,12 @@ class MapEditor(FiniteStateMachine):
         self.menu_bar.add_cascade(label='File', menu=self.file_menu,
                                   underline=0)
 
+        self.grid_var = tk.IntVar()
+        self.grid_var.set(1)
+        self.helplines_var = tk.IntVar()
+        self.helplines_var.set(1)
+
+
         self.file_menu.add_command(
             label='New',
             command=self.file_new,
@@ -610,10 +498,13 @@ class MapEditor(FiniteStateMachine):
 
         self.file_menu.add_command(
             label='Save',
+            command=self.file_save,
             underline=0,
             accelerator='Ctrl+S')
 
-        self.file_menu.add_command(label='Save As', underline=5)
+        self.file_menu.add_command(label='Save As',
+                                   command=self.file_save_as,
+                                   underline=5)
 
         self.file_menu.add_separator()
 
@@ -626,6 +517,24 @@ class MapEditor(FiniteStateMachine):
         self.file_menu.entryconfig(3, state=tk.DISABLED)
         self.file_menu.entryconfig(4, state=tk.DISABLED)
 
+        self.view_menu = tk.Menu(self.menu_bar, tearoff=False)
+        self.menu_bar.add_cascade(label='View', menu=self.view_menu,
+                                  underline=0)
+
+        self.view_menu.add_checkbutton(label="Show Grid",
+                                       onvalue=1,
+                                       offvalue=0,
+                                       variable=self.grid_var,
+                                       underline=5,
+                                       accelerator="Ctrl+G")
+
+        self.view_menu.add_checkbutton(label="Show Guide Lines (H)",
+                                       onvalue=1,
+                                       offvalue=0,
+                                       variable=self.helplines_var,
+                                       underline=18,
+                                       accelerator="Ctrl+H")
+
         self.embed = tk.Frame(self.root, width=1400, height=700)
         self.embed.grid(row=0, column=0, sticky=tk.NW)
 
@@ -635,29 +544,6 @@ class MapEditor(FiniteStateMachine):
         self.toolbox = tk.Frame(self.root)
         self.toolbox.grid(row=0, column=1, sticky=tk.NW)
 
-        self.settings_group = tk.LabelFrame(self.toolbox, text='General editor settings')
-        self.settings_group.pack()
-
-        self.grid_var = tk.IntVar()
-        self.grid_var.set(1)
-        self.helplines_var = tk.IntVar()
-        self.helplines_var.set(1)
-
-        self.check_grid = tk.Checkbutton(self.settings_group,
-                                         text='Show Grid',
-                                         variable=self.grid_var,
-                                         onvalue=1,
-                                         offvalue=0)
-        self.check_grid.pack(side=tk.LEFT)
-
-        self.check_helplines = tk.Checkbutton(self.settings_group,
-                                              text='Show Help Lines',
-                                              variable=self.helplines_var,
-                                              onvalue=1,
-                                              offvalue=0)
-        self.check_helplines.pack()
-
-
         os.environ['SDL_WINDOWID'] = str(self.embed.winfo_id())
 
         self.root.update()
@@ -665,7 +551,68 @@ class MapEditor(FiniteStateMachine):
         pygame.init()
         self.screen = pygame.display.set_mode((DISPLAY_WIDTH,
                                                DISPLAY_HEIGHT))
+
+        self.cmd_manager = CommandManager()
+        self.cmd_manager.state_change_listener.append(self.on_cmd_state_change)
+
+        self.selected = None
+        self.unsaved_changes = False
+
+        self.wall_tex = pygame.image.load('../gfx/wall.png').convert()
+        self.spawnpoint_tex = (
+            pygame.image.load('../gfx/spawnpoint.png').convert())
+
+        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
+
+        self.tool = TileTool(self)
+
+        self.save_path = u''
+
         self.quit = False
+
+    def yes_no(self):
+        title = 'Quit mapedit'
+        msg = 'Are you sure you want to discard unsaved changes?'
+
+        result = tkMessageBox.askyesno(title, msg)
+        self.input.reset_keys()
+
+        return result
+
+    def save_file_dialog(self):
+        result = filedia.asksaveasfilename(
+            defaultextension='.xml',
+            initialdir= os.path.expanduser('~'),
+            initialfile='untiteld',
+            title='Save map')
+
+        self.input.reset_keys()
+
+        return result
+
+    def reset(self):
+        self.cmd_manager.reset()
+        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
+        self.unsaved_changes = False
+        self.save_path = u''
+
+    def window_close(self):
+        if self.unsaved_changes and not self.yes_no():
+            return
+
+        self.root.destroy()
+
+    def on_cmd_state_change(self):
+        self.unsaved_changes = True
+        self.state_change()
+
+    def state_change(self):
+        if self.unsaved_changes:
+            self.file_menu.entryconfig(3, state=tk.NORMAL)
+            self.file_menu.entryconfig(4, state=tk.NORMAL)
+        else:
+            self.file_menu.entryconfig(3, state=tk.DISABLED)
+            self.file_menu.entryconfig(4, state=tk.DISABLED)
 
     def on_mouse_motion(self, pos):
         left = COLS * CELL_SIZE
@@ -676,33 +623,125 @@ class MapEditor(FiniteStateMachine):
         self.label_tile_pos.config(text=msg_str)
 
     def file_new(self):
-        self.change_state(EditState(self, self.grid_var, self.helplines_var))
+        if self.unsaved_changes and not self.yes_no():
+            return
 
+        self.reset()
+
+    # TODO: Add new map API first, don't forget yes no dialog
     #~ def file_open(self):
         #~ result = filedia.askopenfilename(
             #~ defaultextension='.xml',
             #~ initialdir='/',
             #~ title='Open map')
 
+    def save_map(self):
+        self.tilemap.save(self.save_path)
+
+        self.unsaved_changes = False
+
+    def file_save(self):
+        """
+        Write map data as xml to the file specified in 'save_path'.
+        """
+        if self.save_path is not u'':
+            self.save_map()
+        else:
+            self.file_save_as()
+
+    def file_save_as(self):
+        """
+        Open file dialog and write map data as xml to the file
+        selected by the user.
+        """
+
+        result = self.save_file_dialog()
+
+        if result is not u'':
+            self.save_path = result
+            self.save_map()
+
     def update(self):
         """
         Update editor, get user input
         """
+        # TODO: Refactor this, yes?
         if self.input.key_pressed('CONTROL_L'):
             if self.input.key_pressed('Q'):
-                self.quit = True
+                self.exit_cmd()
             elif self.input.key_tapped('N'):
                 self.file_new()
             elif self.input.key_tapped('O'):
                 pass
 
-        self.curr_state.update()
+        # Undo & redo
+        if self.input.key_pressed('CONTROL_L'):
+            if self.input.key_tapped('Z'):
+                self.cmd_manager.undo()
+            elif self.input.key_tapped('Y'):
+                self.cmd_manager.redo()
+
+            # Save file
+            if self.input.key_tapped('S'):
+                self.file_save()
+
+            # Toggle grid
+            if self.input.key_tapped('G'):
+                self.grid_var.set(not self.grid_var.get())
+
+            # Toggle 'help lines'
+            if self.input.key_tapped('H'):
+                self.helplines_var.set(
+                    not self.helplines_var.get())
+        else:
+            if self.input.key_tapped('T'):
+                self.tool = TileTool(self)
+            elif self.input.key_tapped('S'):
+                self.tool = SpawnpointTool(self)
+
+        # Update selected cell
+        row = self.input.mouse_y / CELL_SIZE
+        col = self.input.mouse_x / CELL_SIZE
+        self.selected = (
+            (col if col < COLS else COLS - 1) * CELL_SIZE,
+            (row if row < ROWS else ROWS - 1) * CELL_SIZE)
+
+        self.tool.update()
 
         # Must be called at the very end of update!
         self.input.update()
 
     def draw(self):
-        self.curr_state.draw(self.screen)
+        if self.grid_var.get():
+            """Draw a grid"""
+            for xpos in range(0, DISPLAY_WIDTH, CELL_SIZE):
+                pygame.draw.line(self.screen, DARK_GRAY, (xpos, 0),
+                                 (xpos, DISPLAY_HEIGHT))
+
+            for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
+                pygame.draw.line(self.screen, DARK_GRAY, (0, ypos),
+                                 (DISPLAY_WIDTH, ypos))
+
+        self.tilemap.draw(self.screen)
+
+        self.tool.draw(self.screen)
+
+        pygame.draw.rect(self.screen, ORANGE,
+                         pygame.Rect(self.selected,
+                                     (CELL_SIZE, CELL_SIZE)))
+
+        if self.helplines_var.get():
+            half_size = CELL_SIZE / 2
+
+            point1 = (self.selected[0] + half_size, 0)
+            point2 = (self.selected[0] + half_size, DISPLAY_HEIGHT)
+
+            pygame.draw.line(self.screen, GREEN, point1, point2)
+
+            point1 = (0, self.selected[1] + half_size)
+            point2 = (DISPLAY_WIDTH, self.selected[1] + half_size)
+
+            pygame.draw.line(self.screen, GREEN, point1, point2)
 
     def run(self):
         while not self.quit:
@@ -717,8 +756,7 @@ class MapEditor(FiniteStateMachine):
             self.root.update()
 
     def exit_cmd(self):
-        self.quit = True
-
+        self.window_close()
 
 def main():
     mapedit = MapEditor()
