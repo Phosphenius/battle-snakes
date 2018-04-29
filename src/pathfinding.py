@@ -94,7 +94,7 @@ class AStar(object):
                 spread = add_vecs(tile, spread_dir)
 
                 while (spread not in tilemap.tiles
-                       and not tilemap.on_edge(spread)
+                       and not on_edge(spread)
                        and spread_count < WALL_PENALTY_MAX_SPREAD):
                     penalty[spread] += 12 / spread_count
 

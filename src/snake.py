@@ -9,13 +9,14 @@ from constants import (MAX_HITPOINTS,
                        INIT_SPEED, MIN_SPEED, MAX_SPEED)
 from constants import INVINCIBILITY_BLINK_RATE
 from utils import add_vecs, sub_vecs, normalize, m_distance
+from core.map import wrap_around, on_edge
 
 # -- Directions --
-RIGHT = (+1, 0)
-LEFT = (-1, 0)
-UP = (0, -1)
-DOWN = (0, +1)
-DIRECTIONS = {'right': RIGHT, 'left': LEFT, 'up': UP, 'down': DOWN}
+EAST = (+1, 0)
+WEST = (-1, 0)
+NORTH = (0, -1)
+SOUTH = (0, +1)
+DIRECTIONS = {'E': EAST, 'W': WEST, 'N': NORTH, 'S': SOUTH}
 
 STRAIGHT1_V = Rect(20, 20, 10, 10)
 STRAIGHT1_H = Rect(20, 30, 10, 10)
@@ -75,7 +76,7 @@ def get_arrangement(snake, index, tilemap):
     ba_apart = m_distance(vec_a, vec_b) > 1
     bc_apart = m_distance(vec_c, vec_b) > 1
 
-    a_on_edge = tilemap.on_edge(vec_a)
+    a_on_edge = on_edge(vec_a)
 
     if ba_apart:
         if a_on_edge:
@@ -306,7 +307,7 @@ class Snake(object):
         if not self.ismoving:
             return
 
-        self.body[0] = self.game.tilemap.wrap_around(self.body[0])
+        self.body[0] = wrap_around(self.body[0])
         # Move Snake
         if self.elapsed_t >= 1. / (self._speed + self._speed_bonus):
             self.prev = self.body[:]

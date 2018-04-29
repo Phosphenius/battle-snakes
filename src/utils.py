@@ -62,10 +62,17 @@ def str_to_vec(data):
 
 
 def str_to_vec_lst(data):
-    """Convert string rep. of vector list to tuple list."""
+    """
+    Convert string rep. of vector list to tuple list.
+    """
+    if not data:
+        return []
+
     veclst = []
+
     for entry in data.strip().split(';'):
         veclst.append(str_to_vec(entry))
+
     return veclst
 
 

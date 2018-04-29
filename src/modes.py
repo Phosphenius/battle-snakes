@@ -5,7 +5,7 @@ import pygame
 from collections import defaultdict
 
 from powerup import PowerupManager
-from map import Map
+from core.map import TileMap
 from constants import (SPAWNPOINT_TAG, WALL_TAG, PWRUP_TAG, SHOT_TAG,
                        PORTAL_TAG, SCR_W, PANEL_H)
 from utils import mul_vec, add_vecs
@@ -16,7 +16,7 @@ import gsm
 class GameModeBase(object):
     def __init__(self, game, config):
         self.game = game
-        self.tilemap = Map(game, config['map'])
+        self.tilemap = TileMap(game, config['map'])
         self.pwrup_manager = PowerupManager(game)
         self.spatialhash = defaultdict(list)
         self.players = list()

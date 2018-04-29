@@ -8,7 +8,7 @@ from collections import deque
 import pygame
 
 from colors import WHITE, RED, ORANGE, BLUE
-from snake import Snake, LEFT, RIGHT, UP, DOWN
+from snake import Snake, WEST, EAST, NORTH, SOUTH
 from utils import add_vecs
 from combat import Weapon, DUMMY
 from constants import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
@@ -228,17 +228,17 @@ class Player(PlayerBase):
         PlayerBase.update(self, delta_time)
 
         if self.game.key_manager.key_pressed(self.ctrls['left']) \
-                and self.snake.heading != RIGHT:
-            self.snake.set_heading(LEFT)
+                and self.snake.heading != EAST:
+            self.snake.set_heading(WEST)
         elif self.game.key_manager.key_pressed(self.ctrls['up']) \
-                and self.snake.heading != DOWN:
-            self.snake.set_heading(UP)
+                and self.snake.heading != SOUTH:
+            self.snake.set_heading(NORTH)
         elif self.game.key_manager.key_pressed(self.ctrls['down']) \
-                and self.snake.heading != UP:
-            self.snake.set_heading(DOWN)
+                and self.snake.heading != NORTH:
+            self.snake.set_heading(SOUTH)
         elif self.game.key_manager.key_pressed(self.ctrls['right']) \
-                and self.snake.heading != LEFT:
-            self.snake.set_heading(RIGHT)
+                and self.snake.heading != WEST:
+            self.snake.set_heading(EAST)
 
         if self.game.key_manager.key_tapped(self.ctrls['nextweapon']):
             # FIXME: Dangerous...

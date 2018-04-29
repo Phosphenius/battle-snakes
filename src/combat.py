@@ -4,6 +4,7 @@ Combat module.
 """
 
 from utils import add_vecs, mul_vec
+from core.map import wrap_around
 
 
 # Emitters
@@ -85,7 +86,7 @@ class Shot(object):
         if self.elapsed_t >= self.speed:
             self.elapsed_t -= self.speed
             self.pos = add_vecs(self.pos, self.heading)
-            self.pos = self.game.tilemap.wrap_around(self.pos)
+            self.pos = wrap_around(self.pos)
 
         if self.elapsed_blink >= self.blinkrate:
             self.elapsed_blink -= self.blinkrate
