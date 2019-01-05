@@ -17,7 +17,7 @@ class State(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def enter(self, old_state):
+    def enter(self, old_state): # TODO Refactor this to accept parent context as parameter
         pass
 
     @abstractmethod

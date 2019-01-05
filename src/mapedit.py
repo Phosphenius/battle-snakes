@@ -11,12 +11,14 @@ import tkMessageBox
 import os
 from collections import deque
 from copy import copy
-from xml.etree.ElementTree import ElementTree, Element, SubElement
 
 import pygame
 
 from colors import BLACK, ORANGE, GREEN, DARK_GRAY
-from utils import vec_lst_to_str
+from core.map import TileMapBase
+from Game import GraphicsManager
+
+import editor.tools
 
 
 FPS = 30
@@ -35,6 +37,11 @@ MAX_UNDO_REDO = 1024
 # Map object types
 TILE_OBJ = 0
 SPAWNPOINT_OBJ = 1
+PORTAL_OBJ = 2
+BLOCKED_OBJ = 3
+
+DEFAULT_EXT = '.battle-snakes.map'
+DEFAULT_INIT_DIR = os.path.expanduser('~')
 
 
 def gen_tile_line(point1, point2):
@@ -73,55 +80,6 @@ def gen_tile_rect(point1, point2):
     vert2 = gen_tile_line(botright, (botright[0], botright[1] - height))
 
     return list(set(hort1 + hort2 + vert1 + vert2))
-
-
-
-class TileMap(object):
-    def __init__(self, tile_tex, spawnpoint_tex):
-        self.tile_tex = tile_tex
-        self.spawnpoint_tex = spawnpoint_tex
-        self.tiles = []
-        self.spawnpoints = []
-
-    def get_free(self, obj):
-        return obj not in self.tiles and obj not in self.spawnpoints
-
-    def draw(self, screen):
-        for tile in self.tiles:
-            screen.blit(self.tile_tex, tile)
-
-        for spawnpoint in self.spawnpoints:
-            screen.blit(self.spawnpoint_tex, spawnpoint)
-
-    def __getitem__(self, key):
-        if key == TILE_OBJ:
-            return self.tiles
-        elif key == SPAWNPOINT_OBJ:
-            return self.spawnpoints
-
-    def save(self, path):
-        root = Element('Map', {'description': '', 'size': '128x64'})
-
-        portals_tag = SubElement(root, 'Portals')
-
-        spoints = []
-
-        for spoint in self.spawnpoints:
-            spoints.append((spoint[0] / CELL_SIZE,
-                            spoint[1] / CELL_SIZE))
-
-        spawnpoints_tag = SubElement(root, 'Spawnpoints')
-        spawnpoints_tag.text = vec_lst_to_str(spoints)
-
-        tiles = []
-
-        for tile in self.tiles:
-            tiles.append((tile[0] / CELL_SIZE, tile[1] / CELL_SIZE))
-
-        tiles_tag = SubElement(root, 'Tiles')
-        tiles_tag.text = vec_lst_to_str(tiles)
-
-        ElementTree(root).write(path)
 
 
 class TileTool(object):
@@ -351,7 +309,7 @@ class EditMapCommand(object):
                     self.tilemap[self.obj_type].remove(obj)
                     self.objs_changed.append(obj)
             else:
-                if self.tilemap.get_free(obj):
+                if self.tilemap.is_unblocked(obj):
                     self.tilemap[self.obj_type].append(obj)
                     self.objs_changed.append(obj)
 
@@ -448,8 +406,8 @@ class InputManager(object):
 
 class MapEditor(object):
     def __init__(self):
-        self.input = InputManager(DISPLAY_WIDTH * 0.5,
-                                  DISPLAY_HEIGHT * 0.5)
+        self.input = InputManager(DISPLAY_WIDTH / 2,
+                                  DISPLAY_HEIGHT / 2)
 
         self.root = tk.Tk()
 
@@ -490,7 +448,7 @@ class MapEditor(object):
 
         self.file_menu.add_command(
             label='Open',
-            command=None,
+            command=self.file_open,
             underline=0,
             accelerator='Ctrl+O')
 
@@ -558,17 +516,21 @@ class MapEditor(object):
         self.selected = None
         self.unsaved_changes = False
 
-        self.wall_tex = pygame.image.load('../gfx/wall.png').convert()
-        self.spawnpoint_tex = (
-            pygame.image.load('../gfx/spawnpoint.png').convert())
+        self.graphics = GraphicsManager(self.screen)
 
-        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
+        self.tilemap = TileMapBase(self.graphics)
 
-        self.tool = TileTool(self)
+        self.tile_textures = self.graphics.get_startswith('tile')
+
+        # self.tool = TileTool(self)
+        self.tool = editor.tools.TileTool(self)
 
         self.save_path = u''
 
         self.quit = False
+        self.guide_line_color = GREEN
+
+        self.clipboard = None
 
     def yes_no(self):
         title = 'Quit mapedit'
@@ -581,8 +543,8 @@ class MapEditor(object):
 
     def save_file_dialog(self):
         result = filedia.asksaveasfilename(
-            defaultextension='.xml',
-            initialdir= os.path.expanduser('~'),
+            defaultextension=DEFAULT_EXT,
+            initialdir=DEFAULT_INIT_DIR,
             initialfile='untiteld',
             title='Save map')
 
@@ -592,7 +554,7 @@ class MapEditor(object):
 
     def reset(self):
         self.cmd_manager.reset()
-        self.tilemap = TileMap(self.wall_tex, self.spawnpoint_tex)
+        self.tilemap = TileMapBase(self.graphics)
         self.unsaved_changes = False
         self.save_path = u''
 
@@ -629,14 +591,17 @@ class MapEditor(object):
         self.reset()
 
     # TODO: Add new map API first, don't forget yes no dialog
-    #~ def file_open(self):
-        #~ result = filedia.askopenfilename(
-            #~ defaultextension='.xml',
-            #~ initialdir='/',
-            #~ title='Open map')
+    def file_open(self):
+        result = filedia.askopenfilename(
+            defaultextension=DEFAULT_EXT,
+            initialdir=DEFAULT_INIT_DIR,
+            title='Open map')
+
+        if result is not u'':
+            self.tilemap = TileMapBase(self.graphics, result)
 
     def save_map(self):
-        self.tilemap.save(self.save_path)
+        self.tilemap.write_to_file(self.save_path)
 
         self.unsaved_changes = False
 
@@ -672,7 +637,7 @@ class MapEditor(object):
             elif self.input.key_tapped('N'):
                 self.file_new()
             elif self.input.key_tapped('O'):
-                pass
+                self.file_open()
 
         # Undo & redo
         if self.input.key_pressed('CONTROL_L'):
@@ -693,11 +658,11 @@ class MapEditor(object):
             if self.input.key_tapped('H'):
                 self.helplines_var.set(
                     not self.helplines_var.get())
-        else:
-            if self.input.key_tapped('T'):
-                self.tool = TileTool(self)
-            elif self.input.key_tapped('S'):
-                self.tool = SpawnpointTool(self)
+        # else:
+        #     if self.input.key_tapped('T'):
+        #         self.tool = TileTool(self)
+            # elif self.input.key_tapped('S'):
+            #     self.tool = SpawnpointTool(self)
 
         # Update selected cell
         row = self.input.mouse_y / CELL_SIZE
@@ -713,22 +678,22 @@ class MapEditor(object):
 
     def draw(self):
         if self.grid_var.get():
-            """Draw a grid"""
-            for xpos in range(0, DISPLAY_WIDTH, CELL_SIZE):
-                pygame.draw.line(self.screen, DARK_GRAY, (xpos, 0),
-                                 (xpos, DISPLAY_HEIGHT))
+            # Draw a grid
+            for pos_x in range(0, DISPLAY_WIDTH, CELL_SIZE):
+                pygame.draw.line(self.screen, DARK_GRAY, (pos_x, 0),
+                                 (pos_x, DISPLAY_HEIGHT))
 
-            for ypos in range(0, DISPLAY_HEIGHT, CELL_SIZE):
-                pygame.draw.line(self.screen, DARK_GRAY, (0, ypos),
-                                 (DISPLAY_WIDTH, ypos))
+            for pos_y in range(0, DISPLAY_HEIGHT, CELL_SIZE):
+                pygame.draw.line(self.screen, DARK_GRAY, (0, pos_y),
+                                 (DISPLAY_WIDTH, pos_y))
 
-        self.tilemap.draw(self.screen)
+        self.tilemap.draw()
 
         self.tool.draw(self.screen)
 
-        pygame.draw.rect(self.screen, ORANGE,
-                         pygame.Rect(self.selected,
-                                     (CELL_SIZE, CELL_SIZE)))
+        # pygame.draw.rect(self.screen, ORANGE,
+        #                  pygame.Rect(self.selected,
+        #                              (CELL_SIZE, CELL_SIZE)))
 
         if self.helplines_var.get():
             half_size = CELL_SIZE / 2
@@ -736,12 +701,20 @@ class MapEditor(object):
             point1 = (self.selected[0] + half_size, 0)
             point2 = (self.selected[0] + half_size, DISPLAY_HEIGHT)
 
-            pygame.draw.line(self.screen, GREEN, point1, point2)
+            pygame.draw.line(self.screen, self.guide_line_color,
+                             point1, point2)
 
             point1 = (0, self.selected[1] + half_size)
             point2 = (DISPLAY_WIDTH, self.selected[1] + half_size)
 
-            pygame.draw.line(self.screen, GREEN, point1, point2)
+            pygame.draw.line(self.screen, self.guide_line_color,
+                             point1, point2)
+
+
+    def draw_rect_cursor(self, color):
+        pygame.draw.rect(self.screen, color,
+                         pygame.Rect(self.selected,
+                                     (CELL_SIZE, CELL_SIZE)))
 
     def run(self):
         while not self.quit:

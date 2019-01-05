@@ -58,7 +58,7 @@ class GameModeBase(object):
         self.handle_collisions()
 
     def draw(self):
-        self.tilemap.draw()
+        self.tilemap.draw((0, PANEL_H))
 
         self.pwrup_manager.draw()
         self.game.shot_manager.draw()

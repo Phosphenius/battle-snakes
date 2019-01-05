@@ -9,10 +9,15 @@ from utils import (vec_lst_to_str, str_to_vec_lst, str_to_vec,
                    get_adjacent, m_distance, grid)
 from constants import COLS, ROWS
 
-
 # Defaults for tile map meta data
 DEFAULT_TITLE = 'untitled'
 DEFAULT_DESC = 'no description'
+
+# Map object types
+TILE_OBJ = 0
+SPAWNPOINT_OBJ = 1
+PORTAL_OBJ = 2
+BLOCKED_OBJ = 3
 
 
 def wrap_around(pos):
@@ -157,6 +162,16 @@ class TileMapBase(object):
         self.portals[p1] = (p2, p1_dir)
         self.portals[p2] = (p1, p2_dir)
 
+    def is_unblocked(self, pos):
+        """
+        Determine if 'pos' is unblocked
+        :param pos: pos
+        :return: bool
+        """
+        return (pos not in self.blocked and
+                pos not in self.spawnpoints and
+                pos not in self.portals)
+
     def write_to_file(self, file_path):
         """
         Write map to a zip file containing metadata as a json and the
@@ -191,26 +206,42 @@ class TileMapBase(object):
                 mapzip.write(file)
                 os.remove(file)
 
-    def draw(self):
+    def draw(self, offset=(0, 0)):
         """
         Draw tile map, skipping tiles which have not texture assigned
         :return:
         """
-        for xpos in range(COLS):
-            for ypos in range(ROWS):
-                tile = self.tiles[xpos][ypos]
+        for pos_x in range(COLS):
+            for pos_y in range(ROWS):
+                tile = self.tiles[pos_x][pos_y]
 
                 if tile not in self.textures:
                     continue
 
                 self.gfx_manager.draw(self.textures[tile],
-                                      (xpos, ypos))
+                                      (pos_x, pos_y), True, offset)
 
         for spawnpoint in self.spawnpoints:
             self.gfx_manager.draw('spawnpoint', spawnpoint)
 
         for portal in self.portals.values():
             self.gfx_manager.draw('portal', portal[0])
+
+    def get_obj_type(self, pos):
+        if pos in self.spawnpoints:
+            return SPAWNPOINT_OBJ
+        elif pos in self.portals:
+            return PORTAL_OBJ
+
+    def __getitem__(self, key):
+        if key == TILE_OBJ:
+            return self.tiles
+        elif key == SPAWNPOINT_OBJ:
+            return self.spawnpoints
+        elif key == PORTAL_OBJ:
+            return self.portals
+        elif key == BLOCKED_OBJ:
+            return self.blocked
 
 
 class TileMap(TileMapBase):
