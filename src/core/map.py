@@ -106,7 +106,7 @@ class TileMapBase(object):
         self.title = config.get('title', DEFAULT_TITLE)
         self.description = config.get('description', DEFAULT_DESC)
         self.textures = config.get('textures', {})
-        self.textures = {int(tid): tex for (tid, tex) in self.textures.items()}
+        self.textures = {int(tid): tex for (tid, tex) in list(self.textures.items())}
         self.spawnpoints = [tuple(sp) for sp in config.get('spawnpoints', [])]
         self.portals = {}
         self.tiles = [0] * COLS
@@ -114,7 +114,7 @@ class TileMapBase(object):
         self.blocked = set(str_to_vec_lst(blocked_raw))
         self.islands = []
 
-        for p1, p2 in config.get('portals', {}).items():
+        for p1, p2 in list(config.get('portals', {}).items()):
             self.portals[str_to_vec(p1)] = (tuple(p2[0]), tuple(p2[1]))
 
         if tiles_raw:
@@ -183,7 +183,7 @@ class TileMapBase(object):
         config['textures'] = self.textures
         config['spawnpoints'] = self.spawnpoints
         config['portals'] = {'{0}:{1}'.format(p1[0], p1[1]): p2 for
-                             (p1, p2) in self.portals.items()}
+                             (p1, p2) in list(self.portals.items())}
 
         with ZipFile(file_path, 'w') as mapzip:
             with open('meta.json', 'w') as json_file:
@@ -224,7 +224,7 @@ class TileMapBase(object):
         for spawnpoint in self.spawnpoints:
             self.gfx_manager.draw('spawnpoint', spawnpoint)
 
-        for portal in self.portals.values():
+        for portal in list(self.portals.values()):
             self.gfx_manager.draw('portal', portal[0])
 
     def get_obj_type(self, pos):

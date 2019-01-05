@@ -8,13 +8,11 @@ This module contains the base classes needed to build a finite state machine.
 from abc import ABCMeta, abstractmethod
 
 
-class State(object):
+class State(object, metaclass=ABCMeta):
 
     """
     Abstract class representing the base class for all State classes.
     """
-
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def enter(self, old_state): # TODO Refactor this to accept parent context as parameter
@@ -25,13 +23,11 @@ class State(object):
         pass
 
 
-class FiniteStateMachine(object):
+class FiniteStateMachine(object, metaclass=ABCMeta):
 
     """
     Abstract base class for a finite state machine.
     """
-
-    __metaclass__ = ABCMeta
 
     def __init__(self, init_state=None):
         self.curr_state = init_state

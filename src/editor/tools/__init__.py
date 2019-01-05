@@ -1,1 +1,1 @@
-from tiletool import TileTool
+from .tiletool import TileTool

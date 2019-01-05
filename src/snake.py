@@ -52,7 +52,7 @@ def get_next_to_portal(pos, tilemap):
     """Determine whether pos is right next to a portal.
     :return: The portal next to pos or None
     """
-    for portal in tilemap.portals.keys():
+    for portal in list(tilemap.portals.keys()):
         if m_distance(portal, pos) == 1:
             return portal
 

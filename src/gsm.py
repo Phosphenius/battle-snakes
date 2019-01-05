@@ -461,7 +461,7 @@ class SelectPlayerScreen(GameStateScreen):
 
                     if slot.is_empty():
                         self.slotted.add(player_config['hpid'])
-                        _id = self.id_counter.next()
+                        _id = next(self.id_counter)
                         player_config['id'] = _id
                         player_config['color'] = ID_TO_COLOR[_id]
                         slot.player = player_config

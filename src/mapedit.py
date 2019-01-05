@@ -1,13 +1,13 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """
 Map editor using a pygame window embedded into a tkinter frame
 """
 
-import Tkinter as tk
-import tkFileDialog as filedia
-import tkMessageBox
+import tkinter as tk
+import tkinter.filedialog as filedia
+import tkinter.messagebox
 import os
 from collections import deque
 from copy import copy
@@ -525,7 +525,7 @@ class MapEditor(object):
         # self.tool = TileTool(self)
         self.tool = editor.tools.TileTool(self)
 
-        self.save_path = u''
+        self.save_path = ''
 
         self.quit = False
         self.guide_line_color = GREEN
@@ -536,7 +536,7 @@ class MapEditor(object):
         title = 'Quit mapedit'
         msg = 'Are you sure you want to discard unsaved changes?'
 
-        result = tkMessageBox.askyesno(title, msg)
+        result = tkinter.messagebox.askyesno(title, msg)
         self.input.reset_keys()
 
         return result
@@ -556,7 +556,7 @@ class MapEditor(object):
         self.cmd_manager.reset()
         self.tilemap = TileMapBase(self.graphics)
         self.unsaved_changes = False
-        self.save_path = u''
+        self.save_path = ''
 
     def window_close(self):
         if self.unsaved_changes and not self.yes_no():
@@ -597,7 +597,7 @@ class MapEditor(object):
             initialdir=DEFAULT_INIT_DIR,
             title='Open map')
 
-        if result is not u'':
+        if result is not '':
             self.tilemap = TileMapBase(self.graphics, result)
 
     def save_map(self):
@@ -609,7 +609,7 @@ class MapEditor(object):
         """
         Write map data as xml to the file specified in 'save_path'.
         """
-        if self.save_path is not u'':
+        if self.save_path is not '':
             self.save_map()
         else:
             self.file_save_as()
@@ -622,7 +622,7 @@ class MapEditor(object):
 
         result = self.save_file_dialog()
 
-        if result is not u'':
+        if result is not '':
             self.save_path = result
             self.save_map()
 

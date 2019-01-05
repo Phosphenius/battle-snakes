@@ -133,7 +133,7 @@ class Bot(PlayerBase, FiniteStateMachine):
                                      'lifes': -100, 'hp': -0.8}
         self.pwrup_score = {}
 
-        for pwrup in self.game.pwrup_manager.pwrup_prototypes.values():
+        for pwrup in list(self.game.pwrup_manager.pwrup_prototypes.values()):
             pid = pwrup['pid']
             self.pwrup_score[pid] = 0
             targets = pwrup['actions']

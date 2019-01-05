@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 """Main module of the game"""
@@ -7,7 +7,7 @@ import sys
 import glob
 import os
 import random
-from ConfigParser import SafeConfigParser
+from configparser import ConfigParser
 
 import pygame
 from pygame.locals import QUIT
@@ -80,7 +80,7 @@ class GraphicsManager(object):
         # TODO: Maybe refactor?
         result = []
 
-        for key in self.textures.keys():
+        for key in list(self.textures.keys()):
             if key.startswith(startswith):
                 result.append(key)
 
@@ -143,7 +143,7 @@ class KeyManager(object):
 
 
 def load_player_config(hpid):
-    config_parser = SafeConfigParser()
+    config_parser = ConfigParser()
     config = {'hpid': hpid, 'ctrls': {}}
 
     # TODO: Make path platform independent

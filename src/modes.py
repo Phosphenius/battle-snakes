@@ -85,7 +85,7 @@ class GameModeBase(object):
                 shot.pos = add_vecs(self.tilemap.portals[shot.pos][0],
                                     shot.heading)
 
-        for entries in self.spatialhash.values():
+        for entries in list(self.spatialhash.values()):
             if len(entries) > 1:
                 for player in self.players:
                     for entry in entries:
@@ -104,7 +104,7 @@ class GameModeBase(object):
                                                  spawnpoint))
 
         # Add portals
-        for portal_key, portal_val in self.tilemap.portals.items():
+        for portal_key, portal_val in list(self.tilemap.portals.items()):
             self.spatialhash[portal_key].append((PORTAL_TAG, portal_val))
 
         # Add powerups

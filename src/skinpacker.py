@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 
 
@@ -52,7 +52,7 @@ def main():
             single_tile.fill((0, 0, 0, 0))
             single_tile.blit(src_img, (0, 0), Rect(tile_pos, (10, 10)))
 
-            for rot, offset in ROT_OFFSET.items():
+            for rot, offset in list(ROT_OFFSET.items()):
                 pos = add_vecs(tile.topleft, offset)
                 dst_img.blit(transform.rotate(single_tile, rot), pos)
 
