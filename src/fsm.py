@@ -8,39 +8,72 @@ This module contains the base classes needed to build a finite state machine.
 from abc import ABCMeta, abstractmethod
 
 
-class State(object, metaclass=ABCMeta):
+class State(metaclass=ABCMeta):
 
     """
     Abstract class representing the base class for all State classes.
     """
 
-    @abstractmethod
-    def enter(self, old_state): # TODO Refactor this to accept parent context as parameter
+    def enter(self):
         pass
 
-    @abstractmethod
     def leave(self):
         pass
+    
+    def pause(self):
+        pass
+        
+    def resume(self):
+        pass
 
 
-class FiniteStateMachine(object, metaclass=ABCMeta):
+class GameState(State, metaclass=ABCMeta):
+    def __init__(self, game):
+        self.game = game
+        
+    def update(self, dt):
+        pass
+        
+    def draw(self):
+        pass
+
+
+class StateMachine(metaclass=ABCMeta):
 
     """
     Abstract base class for a finite state machine.
     """
 
     def __init__(self, init_state=None):
-        self.curr_state = init_state
+        self._stack = []
+        
         if init_state:
-            self.curr_state.enter(None)
+            self.change_state(init_state)
+
+    def push_state(self, new_state):
+        if self._stack:
+            self._stack[-1].pause()
+        
+        self._stack.append(new_state)
+        self._stack[-1].enter()
+        
+    def pop_state(self):
+        if self._stack:
+            self._stack.pop().leave()
+            
+        if self._stack:
+            self._stack[-1].resume()
 
     def change_state(self, new_state):
-        """
-        Transition to another state by calling the 'leave' method
-        of the current state and the 'enter' method for the new state.
-        """
-        old_state = self.curr_state
-        if old_state:
-            old_state.leave()
-        self.curr_state = new_state
-        self.curr_state.enter(old_state)
+        if self._stack:
+            self._stack[-1].leave()
+            
+        self._stack.append(new_state)
+        self._stack[-1].enter()
+        
+    @property
+    def current_state(self):
+        if self._stack:
+            return self._stack[-1]
+            
+        return None

@@ -9,7 +9,7 @@ from heapq import nsmallest
 from copy import copy
 
 from player import PlayerBase
-from fsm import State, FiniteStateMachine
+from fsm import State, StateMachine
 from utils import m_distance, sub_vecs
 from pathfinding import Pathfinder
 from snake import get_next_to_portal
@@ -117,7 +117,7 @@ class BotAttackState(BotState):
         pass
 
 
-class Bot(PlayerBase, FiniteStateMachine):
+class Bot(PlayerBase, StateMachine):
 
     """
     Basic bot class.
@@ -125,7 +125,7 @@ class Bot(PlayerBase, FiniteStateMachine):
 
     def __init__(self, game_mode, dead_handler, kwargs):
         PlayerBase.__init__(self, game_mode, dead_handler, **kwargs)
-        FiniteStateMachine.__init__(self, BotCollectState(self))
+        StateMachine.__init__(self, BotCollectState(self))
 
         self.pathfinder = Pathfinder(self.game)
         self.pwrup_target_weights = {'points': -0.1, 'grow': 0.1,
@@ -147,5 +147,5 @@ class Bot(PlayerBase, FiniteStateMachine):
     def update(self, delta_time):
         """Update fsm and player base."""
 
-        self.curr_state.update(delta_time)
+        self.current_state.update(delta_time)
         PlayerBase.update(self, delta_time)

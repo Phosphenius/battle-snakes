@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from fsm import FiniteStateMachine
+from fsm import StateMachine
 from editor.tools.base import Selection, BaseToolState
 import colors
 import utils
@@ -15,7 +15,7 @@ class SelectState(BaseToolState):
         self.selection = Selection(self.tool.editor)
         self.guidelines_prev_state = None
 
-    def enter(self, old_state):
+    def enter(self):
         self.guidelines_prev_state = \
             self.tool.editor.helplines_var.get()
         self.tool.editor.helplines_var.set(0)
@@ -45,7 +45,7 @@ class PasteState(BaseToolState):
         BaseToolState.__init__(tool)
         self.preview = None
 
-    def enter(self, old_state):
+    def enter(self):
         self.preview = self.tool.editor.clipboard
 
     def draw(self):
@@ -58,7 +58,7 @@ class DeleteState(BaseToolState):
         BaseToolState.__init__(self, tool)
         self.prev_guide_line_color = None
 
-    def enter(self, old_state):
+    def enter(self):
         self.prev_guide_line_color = self.tool.editor.guide_line_color
         self.tool.editor.guide_line_color = (180, 100, 20)
 
@@ -68,16 +68,16 @@ class DeleteState(BaseToolState):
     def draw(self):
         self.tool.editor.draw_rect_cursor((180, 100, 20))
 
-class TileTool(FiniteStateMachine):
+class TileTool(StateMachine):
     def __init__(self, editor):
         self.editor = editor
 
-        FiniteStateMachine.__init__(self, InsertState(self))
+        StateMachine.__init__(self, InsertState(self))
 
         self.clipboard = None
 
     def update(self):
-        self.curr_state.update()
+        self.current_state.update()
 
         # FIXME: Maybe this should be inside each state?
         if self.editor.input.key_tapped('S'):
@@ -91,4 +91,4 @@ class TileTool(FiniteStateMachine):
             self.change_state(PasteState(self))
 
     def draw(self, screen):
-        self.curr_state.draw()
+        self.current_state.draw()

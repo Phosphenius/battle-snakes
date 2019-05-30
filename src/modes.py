@@ -41,7 +41,7 @@ class GameModeBase(object):
 
         if self.num_dead_players >= len(self.players):
             screen = gsm.GameOverScreen(self.game, self)
-            self.game.curr_state.change_state(screen)
+            self.game.current_state.change_state(screen)
 
     def start(self):
         for player in self.players:
@@ -128,7 +128,7 @@ class GameModeBase(object):
 
 class ClassicSnakeGameMode(GameModeBase):
     def __init__(self, game, config):
-        config['map'] = '../data/maps/classic_snake.xml'
+        config['map'] = '../data/maps/test01.battle-snakes.map'
 
         for player in config['players']:
             player['snake_config'] = {}

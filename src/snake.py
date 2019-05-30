@@ -331,7 +331,7 @@ class Snake(object):
 
         body_len = len(self.body)
         area = None
-        tilemap = self.game.curr_state.mode.tilemap
+        tilemap = self.game.current_state.mode.tilemap
 
         for index, part in enumerate(self.body):
             if index == 0:

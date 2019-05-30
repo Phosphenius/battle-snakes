@@ -12,8 +12,8 @@ from configparser import ConfigParser
 import pygame
 from pygame.locals import QUIT
 
-from gsm import MenuState
-from fsm import FiniteStateMachine
+from gsm import MainMenuScreen
+from fsm import StateMachine
 from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
 from constants import PANEL_H, CELL_SIZE, SCR_W, SCR_H
@@ -161,7 +161,7 @@ def load_player_config(hpid):
     return config
 
 
-class BattleSnakesGame(FiniteStateMachine):
+class BattleSnakesGame(StateMachine):
 
     """
     Main class representing the game.
@@ -184,16 +184,16 @@ class BattleSnakesGame(FiniteStateMachine):
         for hpid in range(NUM_HUMAN_PLAYERS):
             self.h_player_configs.append(load_player_config(hpid))
 
-        FiniteStateMachine.__init__(self, MenuState(self))
+        StateMachine.__init__(self, MainMenuScreen(self))
 
     def update(self, delta_time):
         """Update the game."""
         self.key_manager.update()
-        self.curr_state.update(delta_time)
+        self.current_state.update(delta_time)
 
     def draw(self):
         """Render."""
-        self.curr_state.draw()
+        self.current_state.draw()
         fps_string = 'FPS: {0:.2f}'.format(self.fps_clock.get_fps())
         self.graphics.draw_string((1200, 2), fps_string, WHITE)
 

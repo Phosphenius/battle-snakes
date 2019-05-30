@@ -118,8 +118,8 @@ class TileMapBase(object):
             self.portals[str_to_vec(p1)] = (tuple(p2[0]), tuple(p2[1]))
 
         if tiles_raw:
-            for pos_y, line in enumerate(tiles_raw.strip().split('\n')):
-                for pos_x, val in enumerate(line.strip().split(' ')):
+            for pos_y, line in enumerate(tiles_raw.strip().split(b'\n')):
+                for pos_x, val in enumerate(line.strip().split(b' ')):
                     self.tiles[pos_x][pos_y] = int(val)
 
         set_of_tiles = set(grid(COLS, ROWS))
@@ -260,13 +260,13 @@ class TileMap(TileMapBase):
 
     def sp_unblocked(self, spawnpoint):
         """Determine if a spawnpoint is blocked."""
-        return len(self.game.curr_state.mode.spatialhash[spawnpoint]) == 1
+        return len(self.game.current_state.mode.spatialhash[spawnpoint]) == 1
 
     def randpos(self):
         """Return random position."""
         while True:
             pos = (self.game.randomizer.randint(1, COLS-1),
                    self.game.randomizer.randint(1, ROWS-1))
-            if (pos not in self.game.curr_state.mode.spatialhash and
+            if (pos not in self.game.current_state.mode.spatialhash and
                     pos not in self.tiles):
                 return pos

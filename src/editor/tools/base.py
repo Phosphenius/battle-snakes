@@ -23,7 +23,7 @@ class BaseToolState(fsm.State):
     def __init__(self, tool):
         self.tool = tool
 
-    def enter(self, old_state):
+    def enter(self):
         pass
 
     def leave(self):

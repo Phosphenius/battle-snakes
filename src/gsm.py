@@ -5,7 +5,7 @@ from itertools import count
 
 from pygame.locals import K_ESCAPE
 
-from fsm import State, FiniteStateMachine
+from fsm import GameState
 from gui import (Button, label, StackPanel, TextDisplay,
                  StandaloneContainer, PlayerSlot)
 from constants import SCR_W
@@ -21,44 +21,10 @@ time runs out!''',
 ID_TO_COLOR = {0: RED, 1: BLUE}
 
 
-class GameStateScreen(State):
-    """
-    Serves as the base class for game states and screens.
-    """
-    def __init__(self, game):
-        self.game = game
 
-    @abstractmethod
-    def update(self, delta_time):
-        pass
-
-    @abstractmethod
-    def draw(self):
-        pass
-
-    def enter(self, old_state):
-        pass
-
-    def leave(self):
-        pass
-
-
-class InGameState(GameStateScreen, FiniteStateMachine):
+class GameOverScreen(GameState):
     def __init__(self, game, mode):
-        GameStateScreen.__init__(self, game)
-        self.mode = mode
-        FiniteStateMachine.__init__(self, CountdownScreen(game, mode))
-
-    def update(self, delta_time):
-        self.curr_state.update(delta_time)
-
-    def draw(self):
-        self.curr_state.draw()
-
-
-class GameOverScreen(GameStateScreen):
-    def __init__(self, game, mode):
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.mode = mode
         self.stack_panel = StackPanel(game, (515, 400), 250)
 
@@ -74,13 +40,13 @@ class GameOverScreen(GameStateScreen):
     def btn_again_action(self):
         self.mode.reinit()
         screen = CountdownScreen(self.game, self.mode)
-        self.game.curr_state.change_state(screen)
+        self.game.current_state.change_state(screen)
 
     def btn_menu_action(self):
         self.game.change_state(MenuState(self.game))
 
     def btn_quit_action(self):
-        self.game.curr_state.change_state(QuitScreen(self.game))
+        self.game.push_state(QuitScreen(self.game))
 
     def update(self, delta_time):
         self.stack_panel.update(delta_time)
@@ -92,11 +58,10 @@ class GameOverScreen(GameStateScreen):
                                        WHITE, big=True)
 
 
-class GamePausedScreen(GameStateScreen):
+class GamePausedScreen(GameState):
     def __init__(self, game, mode):
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.mode = mode
-        self.prev_state = None
 
         self.stack_panel = StackPanel(game, (515, 280), 250)
 
@@ -115,7 +80,7 @@ class GamePausedScreen(GameStateScreen):
                                      btn_menu, btn_quit)
 
     def btn_resume_action(self):
-        self.game.curr_state.change_state(self.prev_state)
+        self.game.pop_state()
 
     def btn_opts_action(self):
         pass  # TODO: Yet to be implemented.
@@ -124,11 +89,11 @@ class GamePausedScreen(GameStateScreen):
         self.game.change_state(MenuState(self.game))
 
     def btn_quit_action(self):
-        self.game.curr_state.change_state(QuitScreen(self.game))
+        self.game.current_state.change_state(QuitScreen(self.game))
 
     def update(self, delta_time):
         if self.game.key_manager.key_tapped(K_ESCAPE):
-            self.game.curr_state.change_state(self.prev_state)
+            self.game.pop_state()
 
         self.stack_panel.update(delta_time)
 
@@ -136,13 +101,10 @@ class GamePausedScreen(GameStateScreen):
         self.mode.draw()
         self.stack_panel.draw()
 
-    def enter(self, old_state):
-        self.prev_state = old_state
 
-
-class PlayingState(GameStateScreen):
+class PlayingState(GameState):
     def __init__(self, game, mode):
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.mode = mode
         # FIXME: This really necessary?
         self.game.tilemap = mode.tilemap
@@ -153,18 +115,18 @@ class PlayingState(GameStateScreen):
 
         if self.game.key_manager.key_tapped(K_ESCAPE):
             state = GamePausedScreen(self.game, self.mode)
-            self.game.curr_state.change_state(state)
+            self.game.current_state.change_state(state)
 
     def draw(self):
         self.mode.draw()
 
 
-class CountdownScreen(GameStateScreen):
+class CountdownScreen(GameState):
     """
     Screen which displays a simple countdown.
     """
     def __init__(self, game, mode):
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.mode = mode
         self.countdown = 4
 
@@ -172,7 +134,7 @@ class CountdownScreen(GameStateScreen):
         self.countdown -= delta_time
 
         if self.countdown <= 1:
-            self.game.curr_state.change_state(PlayingState(self.game,
+            self.game.change_state(PlayingState(self.game,
                                                            self.mode))
 
     def draw(self):
@@ -183,21 +145,9 @@ class CountdownScreen(GameStateScreen):
                                        WHITE, big=True)
 
 
-class MenuState(GameStateScreen, FiniteStateMachine):
+class MainMenuScreen(GameState):
     def __init__(self, game):
-        GameStateScreen.__init__(self, game)
-        FiniteStateMachine.__init__(self, MainMenuScreen(game))
-
-    def update(self, delta_time):
-        self.curr_state.update(delta_time)
-
-    def draw(self):
-        self.curr_state.draw()
-
-
-class MainMenuScreen(GameStateScreen):
-    def __init__(self, game):
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.stackpanel = StackPanel(game, (200, 300), 400)
 
         btn_single_player = Button(game,
@@ -234,19 +184,19 @@ class MainMenuScreen(GameStateScreen):
 
     def btn_sp_action(self):
         new_state = SinglePlayerSelectModeScreen(self.game)
-        self.game.curr_state.change_state(new_state)
+        self.game.push_state(new_state)
 
     def btn_mp_action(self):
         pass
 
     def btn_st_action(self):
-        self.game.curr_state.change_state(SettingsScreen(self.game))
+        self.game.push_state(SettingsScreen(self.game))
 
     def btn_cr_action(self):
-        self.game.curr_state.change_state(CreditsScreen(self.game))
+        self.game.push_state(CreditsScreen(self.game))
 
     def btn_qt_action(self):
-        self.game.curr_state.change_state(QuitScreen(self.game))
+        self.game.push_state(QuitScreen(self.game))
 
     def update(self, delta_time):
         self.stackpanel.update(delta_time)
@@ -255,16 +205,13 @@ class MainMenuScreen(GameStateScreen):
         self.container.draw()
         self.stackpanel.draw()
 
-    def enter(self, old_state):
+    def enter(self):
         self.stackpanel.change_focus(0)
 
 
-class SinglePlayerSelectModeScreen(GameStateScreen):
+class SinglePlayerSelectModeScreen(GameState):
     def __init__(self, game):
-        self.game = game
-        GameStateScreen.__init__(self, game)
-
-        self.prev_screen = None
+        GameState.__init__(self, game)
 
         self.stackpanel = StackPanel(game,
                                      (200, 300),
@@ -302,13 +249,13 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
 
     def btn_cl_action(self):
         state = SelectPlayerScreen(self.game, 1)
-        self.game.curr_state.change_state(state)
+        self.game.push_state(state)
 
     def btn_tl_action(self):
         pass
 
     def btn_bk_action(self):
-        self.game.curr_state.change_state(self.prev_screen)
+        self.game.pop_state()
 
     def update(self, delta_time):
         self.stackpanel.update(delta_time)
@@ -317,15 +264,10 @@ class SinglePlayerSelectModeScreen(GameStateScreen):
         self.container.draw()
         self.stackpanel.draw()
 
-    def enter(self, old_state):
-        self.prev_screen = old_state
 
-
-class SettingsScreen(GameStateScreen):
+class SettingsScreen(GameState):
     def __init__(self, game):
-        self.game = game
-        GameStateScreen.__init__(self, game)
-        self.prev_screen = None
+        GameState.__init__(self, game)
         self.stackpanel = StackPanel(game, (SCR_W / 2 - 200, 300), 400)
 
         btn_controls = Button(game,
@@ -349,7 +291,7 @@ class SettingsScreen(GameStateScreen):
         pass
 
     def btn_bk_action(self):
-        self.game.curr_state.change_state(self.prev_screen)
+        self.game.pop_state()
 
     def update(self, delta_time):
         self.stackpanel.update(delta_time)
@@ -357,15 +299,10 @@ class SettingsScreen(GameStateScreen):
     def draw(self):
         self.stackpanel.draw()
 
-    def enter(self, old_state):
-        self.prev_screen = old_state
 
-
-class CreditsScreen(GameStateScreen):
+class CreditsScreen(GameState):
     def __init__(self, game):
-        self.game = game
-        GameStateScreen.__init__(self, game)
-        self.prev_screen = None
+        GameState.__init__(self, game)
 
         self.btn_back = Button(game,
                                text='Back',
@@ -378,7 +315,7 @@ class CreditsScreen(GameStateScreen):
                                              focus=True)
 
     def btn_bk_action(self):
-        self.game.curr_state.change_state(self.prev_screen)
+        self.game.pop_state()
 
     def update(self, delta_time):
         self.container.update(delta_time)
@@ -389,15 +326,11 @@ class CreditsScreen(GameStateScreen):
         text = 'Xolonium Font: Severin Meyer'
         self.game.graphics.draw_string((300, 70), text, WHITE, big=True)
         self.container.draw()
+        
 
-    def enter(self, old_state):
-        self.prev_screen = old_state
-
-
-class QuitScreen(GameStateScreen):
+class QuitScreen(GameState):
     def __init__(self, game):
-        self.game = game
-        GameStateScreen.__init__(self, game)
+        GameState.__init__(self, game)
         self.stackpanel = StackPanel(game, (SCR_W / 2 - 200, 300), 400)
 
         txt_question = label(game,
@@ -407,10 +340,8 @@ class QuitScreen(GameStateScreen):
 
         self.stackpanel.add_widgets(txt_question, btn_yes, btn_no)
 
-        self.prev_screen = None
-
     def btn_no_action(self):
-        self.game.curr_state.change_state(self.prev_screen)
+        self.game.pop_state()
 
     def update(self, delta_time):
         self.stackpanel.update(delta_time)
@@ -418,15 +349,10 @@ class QuitScreen(GameStateScreen):
     def draw(self):
         self.stackpanel.draw()
 
-    def enter(self, old_state):
-        self.prev_screen = old_state
 
-
-class SelectPlayerScreen(GameStateScreen):
+class SelectPlayerScreen(GameState):
     def __init__(self, game, slots):
-        GameStateScreen.__init__(self, game)
-
-        self.prev_screen = None
+        GameState.__init__(self, game)
 
         if not 0 < slots < 5:
             raise ValueError('Too few or too many slots specified')
@@ -446,9 +372,9 @@ class SelectPlayerScreen(GameStateScreen):
         if all([slot.get_ready() for slot in self.slots]):
             players = [slot.player for slot in self.slots]
             config = {'players': players}
-            state = InGameState(self.game,
+            state = CountdownScreen(self.game,
                                 ClassicSnakeGameMode(self.game, config))
-            self.game.change_state(state)
+            self.game.push_state(state)
 
         for player_config in self.game.h_player_configs:
 
@@ -468,11 +394,8 @@ class SelectPlayerScreen(GameStateScreen):
                         break
 
             elif self.game.key_manager.key_tapped(back_key):
-                self.game.curr_state.curr_state = self.prev_screen
+                self.game.pop_state()
 
     def draw(self):
         for slot in self.slots:
             slot.draw()
-
-    def enter(self, old_state):
-        self.prev_screen = old_state
