@@ -58,7 +58,7 @@ def normalize(vec):
 
 def str_to_vec(data):
     """Convert string rep. of a vector to tuple."""
-    return tuple(int(i) for i in data.strip().split(':'))
+    return tuple(int(i) for i in data.strip().split(b':'))
 
 
 def str_to_vec_lst(data):
@@ -70,7 +70,7 @@ def str_to_vec_lst(data):
 
     veclst = []
 
-    for entry in data.strip().split(';'):
+    for entry in data.strip().split(b';'):
         veclst.append(str_to_vec(entry))
 
     return veclst
