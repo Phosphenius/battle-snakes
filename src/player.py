@@ -7,13 +7,12 @@ from collections import deque
 
 import pygame
 
-from colors import WHITE, RED, ORANGE, BLUE
 from snake import Snake, WEST, EAST, NORTH, SOUTH
 from utils import add_vecs
 from combat import Weapon, DUMMY
 from constants import (INIT_BOOST, MAX_BOOST, BOOST_COST, BOOST_GAIN,
                        BOOST_SPEED, INIT_LIFES, MAX_LIFES, PORTAL_TAG,
-                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS)
+                       PWRUP_TAG, SHOT_TAG, MAX_HITPOINTS, WHITE, RED, ORANGE, BLUE)
 
 
 class PlayerBase(object):

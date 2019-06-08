@@ -6,14 +6,13 @@ Base functionality for tile map editor tools
 """
 
 
-import colors
 import pygame
 import fsm
 from mapedit import LEFT_MOUSE_BUTTON
 import constants
 
 
-SELECTION_DEFAULT_COLOR = colors.YELLOW
+SELECTION_DEFAULT_COLOR = constants.YELLOW
 
 
 class BaseToolState(fsm.State):

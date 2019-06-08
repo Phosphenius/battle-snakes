@@ -11,7 +11,7 @@ from collections import deque
 import pygame
 from pygame.locals import K_UP, K_DOWN, K_RETURN, K_LEFT, K_RIGHT
 
-from colors import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, LIGHT_BLUE,
+from constants import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, LIGHT_BLUE,
                     DARK_PURPLE, DARK_GRAY, LIGHT_GRAY, ORANGE)
 from utils import add_vecs
 

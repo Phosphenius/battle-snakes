@@ -14,9 +14,8 @@ from pygame.locals import QUIT
 
 from gsm import MainMenuScreen
 from fsm import StateMachine
-from colors import WHITE, BLACK
 from utils import add_vecs, mul_vec
-from constants import PANEL_H, CELL_SIZE, SCR_W, SCR_H
+from constants import PANEL_H, CELL_SIZE, SCR_W, SCR_H, WHITE, BLACK
 from combat import ShotManager
 
 NUM_HUMAN_PLAYERS = 2

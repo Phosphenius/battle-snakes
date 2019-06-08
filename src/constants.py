@@ -34,3 +34,52 @@ PORTAL_TAG = '#portal'
 WALL_TAG = '#wall'
 SPAWNPOINT_TAG = '#spawnpoint'
 SHOT_TAG = '#shot'
+
+# Colors
+CORNFLOWERBLUE = (100, 149, 237) #6495ED
+BLACK = (0, 0, 0) #000000
+WHITE = (255, 255, 255) #FFFFFF
+RED = (255, 0, 0)  #FF0000
+LIME = (0, 255, 0) #00FF00
+BLUE = (0, 0, 255) #0000FF
+YELLOW = (255, 255, 0) #FFFF00
+CYAN = (0, 255, 255) #00FFFF
+MAGENTA = (255, 0, 255) #FF00FF
+SILVER = (192, 192, 192) #C0C0C0
+GRAY = (128, 128, 128) #808080
+MAROON = (128, 0, 0) #800000
+OLIVE = (128, 128, 0) #808000
+GREEN = (0, 128, 0) #008000
+PURPLE = (128, 0, 128) #800080
+TEAL = (0, 128, 128) #008080
+NAVY = (0, 0, 128) #000080
+
+# made up colors we still need
+# TODO Migrate to other colors
+LIGHT_GRAY = (178, 178, 178)
+DARK_GRAY = (64, 64, 64)
+DARK_GREEN = (0, 127, 0)
+LIGHT_BLUE = (48, 48, 255)
+PURPLE = (255, 0, 255)
+DARK_PURPLE = (127, 0, 127)
+ORANGE = (255, 127, 0)
+
+COLORS = {
+          'cornflowerblue': CORNFLOWERBLUE,
+          'black': BLACK,
+          'white': WHITE,
+          'red': RED,
+          'lime': LIME,
+          'blue': BLUE,
+          'yellow': YELLOW,
+          'cyan': CYAN,
+          'magenta': MAGENTA,
+          'silver': SILVER,
+          'gray': GRAY,
+          'maroon': MAROON,
+          'olive': OLIVE,
+          'green': GREEN,
+          'purple': PURPLE,
+          'teal': TEAL,
+          'navy': NAVY
+          }

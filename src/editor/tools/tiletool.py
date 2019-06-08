@@ -2,8 +2,8 @@
 
 from fsm import StateMachine
 from editor.tools.base import Selection, BaseToolState
-import colors
 import utils
+import constants
 
 
 class SelectState(BaseToolState):
@@ -32,12 +32,12 @@ class SelectState(BaseToolState):
 
     def draw(self):
         self.selection.draw()
-        self.tool.editor.draw_rect_cursor(colors.YELLOW)
+        self.tool.editor.draw_rect_cursor(constants.YELLOW)
 
 
 class InsertState(BaseToolState):
     def draw(self):
-        self.tool.editor.draw_rect_cursor(colors.GREEN)
+        self.tool.editor.draw_rect_cursor(constants.GREEN)
 
 
 class PasteState(BaseToolState):

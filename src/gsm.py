@@ -8,8 +8,7 @@ from pygame.locals import K_ESCAPE
 from fsm import GameState
 from gui import (Button, label, StackPanel, TextDisplay,
                  StandaloneContainer, PlayerSlot)
-from constants import SCR_W
-from colors import WHITE, DARK_GREEN, RED, BLUE
+from constants import SCR_W, WHITE, DARK_GREEN, RED, BLUE
 from modes import ClassicSnakeGameMode
 
 

@@ -14,7 +14,7 @@ from copy import copy
 
 import pygame
 
-from colors import BLACK, ORANGE, GREEN, DARK_GRAY
+from constants import BLACK, ORANGE, GREEN, DARK_GRAY
 from core.map import TileMapBase
 from Game import GraphicsManager
 
