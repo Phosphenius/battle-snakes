@@ -188,9 +188,6 @@ class WidgetBase(object):
         self._focus = False
         self.brd_color_no_focus = self.brd_color
 
-        self.t_elapsed = 0
-        self.flash_freq = 1. / 3
-
     @property
     def focus(self):
         return self._focus
@@ -206,16 +203,7 @@ class WidgetBase(object):
                 self.brd_color = self.brd_color_no_focus
 
     def update(self, delta_time):
-        if self._focus and self.focus_enabled:
-            self.t_elapsed += delta_time
-
-            if self.t_elapsed >= self.flash_freq:
-                self.t_elapsed -= self.flash_freq
-
-                if self.brd_color == self.focus_color:
-                    self.brd_color = self.brd_color_no_focus
-                else:
-                    self.brd_color = self.focus_color
+        pass
 
     def draw(self, pos, width):
         border_color = self.brd_color
