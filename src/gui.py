@@ -11,37 +11,16 @@ from collections import deque
 import pygame
 from pygame.locals import K_UP, K_DOWN, K_RETURN, K_LEFT, K_RIGHT
 
-from constants import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, LIGHT_BLUE,
-                    DARK_PURPLE, DARK_GRAY, LIGHT_GRAY, ORANGE)
 from utils import add_vecs
-
-
-# Base widget default values
-WIDGET_HEIGHT = 50
-WIDGET_BG_COLOR = GRAY
-WIDGET_BORDER_THICKNESS = 3
-WIDGET_BORDER_COLOR = RED
-WIDGET_BORDER_FOCUS_COLOR = YELLOW
-
-# Base widget constants
-WIDGET_DISABLED_BORDER_COLOR = DARK_GRAY
-
-# Text widget default values
-TEXT_WIDGET_TEXT_COLOR = BLACK
-TEXT_WIDGET_TEXT_COLOR_FOCUS = WHITE
-
-# Text widget constants
-TEXT_WIDGET_DISABLED_TEXT_COLOR = LIGHT_GRAY
-
-# Label default values
-LABEL_WIDGET_TEXT_COLOR = LIGHT_BLUE
-LABEL_WIDGET_BORDER_COLOR = DARK_PURPLE
-
-# Cycle button constants
-TRIANGLE_WIDTH = 25
-
-# Stack panel default values
-STACK_PANEL_PAD_Y = 10
+from constants import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, LIGHT_BLUE,
+                    DARK_PURPLE, DARK_GRAY, LIGHT_GRAY, ORANGE, WIDGET_HEIGHT,
+                    WIDGET_BG_COLOR, WIDGET_BORDER_THICKNESS,
+                    WIDGET_BORDER_COLOR, WIDGET_BORDER_FOCUS_COLOR,
+                    WIDGET_DISABLED_BORDER_COLOR, TEXT_WIDGET_TEXT_COLOR,
+                    TEXT_WIDGET_TEXT_COLOR_FOCUS,
+                    TEXT_WIDGET_DISABLED_TEXT_COLOR, LABEL_WIDGET_TEXT_COLOR,
+                    LABEL_WIDGET_BORDER_COLOR, TRIANGLE_WIDTH,
+                    STACK_PANEL_PAD_Y)
 
 
 def label(game, **kwargs):

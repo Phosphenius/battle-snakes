@@ -83,3 +83,31 @@ COLORS = {
           'teal': TEAL,
           'navy': NAVY
           }
+
+# Base widget default values
+WIDGET_HEIGHT = 50
+WIDGET_BG_COLOR = GRAY
+WIDGET_BORDER_THICKNESS = 3
+WIDGET_BORDER_COLOR = RED
+WIDGET_BORDER_FOCUS_COLOR = ORANGE
+
+# Base widget constants
+WIDGET_DISABLED_BORDER_COLOR = DARK_GRAY
+
+# Text widget default values
+TEXT_WIDGET_TEXT_COLOR = BLACK
+TEXT_WIDGET_TEXT_COLOR_FOCUS = WHITE
+
+# Text widget constants
+TEXT_WIDGET_DISABLED_TEXT_COLOR = LIGHT_GRAY
+
+# Label default values
+LABEL_WIDGET_TEXT_COLOR = LIGHT_BLUE
+LABEL_WIDGET_BORDER_COLOR = DARK_PURPLE
+
+# Cycle button constants
+TRIANGLE_WIDTH = 25
+
+# Stack panel default values
+STACK_PANEL_PAD_Y = 10
+
