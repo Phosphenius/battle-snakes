@@ -12,6 +12,8 @@ from configparser import ConfigParser
 import pygame
 from pygame.locals import QUIT
 
+from core.store import SettingsStore
+from core.defaults import Settings
 from gsm import MainMenuScreen
 from fsm import StateMachine
 from utils import add_vecs, mul_vec
@@ -175,6 +177,7 @@ class BattleSnakesGame(StateMachine):
         self.fps_clock = pygame.time.Clock()
         self.key_manager = KeyManager()
         self.graphics = GraphicsManager(self.screen)
+        self.settings = SettingsStore('../settings.json', Settings)
 
         self.shot_manager = ShotManager(self)
 
