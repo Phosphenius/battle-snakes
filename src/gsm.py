@@ -8,7 +8,7 @@ from pygame.locals import K_ESCAPE
 from fsm import GameState
 from gui import (Button, label, StackPanel, TextDisplay,
                  StandaloneContainer, PlayerSlot)
-from constants import SCR_W, WHITE, DARK_GREEN, RED, BLUE
+from constants import SCR_W, WHITE, RED, BLUE
 from modes import ClassicSnakeGameMode
 
 
@@ -174,7 +174,7 @@ class MainMenuScreen(GameState):
                                     btn_quit)
 
         txt = 'Welcome to Battle Snakes!'
-        textbox = TextDisplay(game, text=txt, bg_color=DARK_GREEN)
+        textbox = TextDisplay(game, text=txt, bg_color=(0, 128, 0))
         self.container = StandaloneContainer(game,
                                              (650, 300),
                                              600,
@@ -232,7 +232,7 @@ class SinglePlayerSelectModeScreen(GameState):
                                     btn_timelimit,
                                     btn_back)
 
-        self.textbox = TextDisplay(game, bg_color=DARK_GREEN)
+        self.textbox = TextDisplay(game, bg_color=(0, 128, 0))
 
         self.container = StandaloneContainer(game,
                                              (650, 300),

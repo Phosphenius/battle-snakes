@@ -14,7 +14,7 @@ from copy import copy
 
 import pygame
 
-from constants import BLACK, ORANGE, GREEN, DARK_GRAY
+from constants import BLACK, ORANGE, GREEN, GUN_METAL
 from core.map import TileMapBase
 from Game import GraphicsManager
 
@@ -680,11 +680,11 @@ class MapEditor(object):
         if self.grid_var.get():
             # Draw a grid
             for pos_x in range(0, DISPLAY_WIDTH, CELL_SIZE):
-                pygame.draw.line(self.screen, DARK_GRAY, (pos_x, 0),
+                pygame.draw.line(self.screen, GUN_METAL, (pos_x, 0),
                                  (pos_x, DISPLAY_HEIGHT))
 
             for pos_y in range(0, DISPLAY_HEIGHT, CELL_SIZE):
-                pygame.draw.line(self.screen, DARK_GRAY, (0, pos_y),
+                pygame.draw.line(self.screen, GUN_METAL, (0, pos_y),
                                  (DISPLAY_WIDTH, pos_y))
 
         self.tilemap.draw()

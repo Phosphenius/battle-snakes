@@ -12,8 +12,8 @@ import pygame
 from pygame.locals import K_UP, K_DOWN, K_RETURN, K_LEFT, K_RIGHT
 
 from utils import add_vecs
-from constants import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, LIGHT_BLUE,
-                    DARK_PURPLE, DARK_GRAY, LIGHT_GRAY, ORANGE, WIDGET_HEIGHT,
+from constants import (GRAY, RED, YELLOW, BLACK, WHITE, GREEN, 
+                    DARK_PURPLE, ORANGE, WIDGET_HEIGHT,
                     WIDGET_BG_COLOR, WIDGET_BORDER_THICKNESS,
                     WIDGET_BORDER_COLOR, WIDGET_BORDER_FOCUS_COLOR,
                     WIDGET_DISABLED_BORDER_COLOR, TEXT_WIDGET_TEXT_COLOR,

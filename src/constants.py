@@ -53,16 +53,10 @@ GREEN = (0, 128, 0) #008000
 PURPLE = (128, 0, 128) #800080
 TEAL = (0, 128, 128) #008080
 NAVY = (0, 0, 128) #000080
-
-# made up colors we still need
-# TODO Migrate to other colors
-LIGHT_GRAY = (178, 178, 178)
-DARK_GRAY = (64, 64, 64)
-DARK_GREEN = (0, 127, 0)
-LIGHT_BLUE = (48, 48, 255)
-PURPLE = (255, 0, 255)
-DARK_PURPLE = (127, 0, 127)
-ORANGE = (255, 127, 0)
+DARK_PURPLE = (128, 0, 128) #800080
+DARK_BLUE = (0, 0, 160) #0000A0
+ORANGE = (255, 165, 0) #2C3539
+GUN_METAL = (44, 53, 57) #FFA500
 
 COLORS = {
           'cornflowerblue': CORNFLOWERBLUE,
@@ -81,7 +75,11 @@ COLORS = {
           'green': GREEN,
           'purple': PURPLE,
           'teal': TEAL,
-          'navy': NAVY
+          'navy': NAVY,
+          'purple': PURPLE,
+          'dark_blue': DARK_BLUE,
+          'orange': ORANGE,
+          'gun_metal': GUN_METAL
           }
 
 # Base widget default values
@@ -92,18 +90,18 @@ WIDGET_BORDER_COLOR = RED
 WIDGET_BORDER_FOCUS_COLOR = ORANGE
 
 # Base widget constants
-WIDGET_DISABLED_BORDER_COLOR = DARK_GRAY
+WIDGET_DISABLED_BORDER_COLOR = GUN_METAL
 
 # Text widget default values
 TEXT_WIDGET_TEXT_COLOR = BLACK
 TEXT_WIDGET_TEXT_COLOR_FOCUS = WHITE
 
 # Text widget constants
-TEXT_WIDGET_DISABLED_TEXT_COLOR = LIGHT_GRAY
+TEXT_WIDGET_DISABLED_TEXT_COLOR = SILVER
 
 # Label default values
-LABEL_WIDGET_TEXT_COLOR = LIGHT_BLUE
-LABEL_WIDGET_BORDER_COLOR = DARK_PURPLE
+LABEL_WIDGET_TEXT_COLOR = DARK_BLUE
+LABEL_WIDGET_BORDER_COLOR = PURPLE
 
 # Cycle button constants
 TRIANGLE_WIDTH = 25
